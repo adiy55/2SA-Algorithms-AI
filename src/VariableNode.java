@@ -66,7 +66,7 @@ public class VariableNode {
     }
 
     public String toString() {
-        String s = "\n{NAME: " + name + ", OUTCOME:";
+        String s = "{NAME: " + name + ", OUTCOME:";
         for (String value : outcomes) {
             s = s + " " + value;
         }

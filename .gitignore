@@ -25,3 +25,7 @@ hs_err_pid*
 # directories
 src/drafts/
 .idea/
+
+# files
+src/big_net.xml
+src/alarm_net.xml

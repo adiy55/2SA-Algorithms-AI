@@ -10,9 +10,10 @@ public class fileParser {
     public fileParser(String path) {
         filename = path;
         data = new ArrayList<>();
+        parseXML();
     }
 
-    public void parseXML() {
+    private void parseXML() {
         try {
             Scanner sc = new Scanner(new File(filename));
             while (sc.hasNext()) {
