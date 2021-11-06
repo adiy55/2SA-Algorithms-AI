@@ -3,29 +3,26 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class myParser {
-    private String file;
-    private ArrayList<Variable> variables;
-    private ArrayList<Definition> definitions;
+public class fileParser {
+    private String filename;
+    private ArrayList<VariableNode> data;
 
-    public myParser(String file) {
-        this.file = file;
-        this.variables = new ArrayList<>();
-        this.definitions = new ArrayList<>();
+    public fileParser(String path) {
+        filename = path;
+        data = new ArrayList<>();
     }
 
     public void parseXML() {
         try {
-            Scanner sc = new Scanner(new File(this.file));
+            Scanner sc = new Scanner(new File(filename));
             while (sc.hasNext()) {
                 String s = sc.nextLine();
                 if (s.contains("<VARIABLE>")) {
-                    Variable v = parseVariable(sc);
-                    variables.add(v);
+                    VariableNode v = parseVariable(sc);
+                    data.add(v);
                 }
                 if (s.contains("<DEFINITION>")) {
-                    Definition d = parseDefinition(sc);
-                    definitions.add(d);
+                    parseDefinition(sc);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -33,7 +30,7 @@ public class myParser {
         }
     }
 
-    private Variable parseVariable(Scanner sc) {
+    private VariableNode parseVariable(Scanner sc) {
         String name = "";
         String currLine = "";
         ArrayList<String> lst = new ArrayList<>();
@@ -47,26 +44,27 @@ public class myParser {
                 lst.add(curr);
             }
         }
-        return new Variable(name, lst, false);
+        return new VariableNode(name, lst);
     }
 
-    private Definition parseDefinition(Scanner sc) {
+    private void parseDefinition(Scanner sc) {
         String currLine = "";
         String varName;
         int varIndex = -1;
-        ArrayList<Variable> parents = new ArrayList<>();
+        ArrayList<VariableNode> parents = new ArrayList<>();
         ArrayList<Double> table = new ArrayList<>();
         while (sc.hasNext() && !(currLine.contains("</DEFINITION>"))) {
             currLine = sc.nextLine();
             if (currLine.contains("FOR")) {
                 varName = currLine.split(">")[1].split("<")[0];
-                varIndex = findVariable(varName);
+                varIndex = findVariableNode(varName);
             }
             if (currLine.contains("GIVEN")) {
                 String curr = currLine.split(">")[1].split("<")[0];
-                int index = findVariable(curr);
+                int index = findVariableNode(curr);
                 if (index != -1) {
-                    parents.add(variables.get(index));
+                    parents.add(data.get(index));
+                    data.get(index).addChild(data.get(varIndex));
                 }
             }
             if (currLine.contains("TABLE")) {
@@ -77,13 +75,14 @@ public class myParser {
                 }
             }
         }
-        return new Definition(variables.get(varIndex), parents, table);
+        data.get(varIndex).setParents(parents);
+        data.get(varIndex).setTable(table);
     }
 
-    private int findVariable(String varName) {
+    private int findVariableNode(String varName) {
         int varIndex = -1;
-        for (int i = 0; i < variables.size(); i++) {
-            Variable currVar = variables.get(i);
+        for (int i = 0; i < data.size(); i++) {
+            VariableNode currVar = data.get(i);
             if (currVar.getName().equals(varName)) {
                 varIndex = i;
                 break;
@@ -92,7 +91,7 @@ public class myParser {
         return varIndex;
     }
 
-    public ArrayList<Definition> getDefinitions() {
-        return definitions;
+    public ArrayList<VariableNode> getData() {
+        return data;
     }
 }
