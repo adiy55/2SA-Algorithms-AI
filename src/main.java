@@ -22,6 +22,10 @@ public class main {
         Network N = new Network(file1, "alarm net");
         ArrayList<VariableNode> variables = N.getNet();
         System.out.println(N);
+
+        int i = N.findNodeIndex("A");
+        System.out.println(i);
+
     }
 
 }

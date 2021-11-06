@@ -17,6 +17,15 @@ public class Network {
         this.networkName = networkName;
     }
 
+    public int findNodeIndex(String nodeName) {
+        for (int i = 0; i < net.size(); i++) {
+            if (net.get(i).getName().equals(nodeName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public String toString() {
         String s = "NETWORK: " + networkName;
         for (VariableNode var : net) {
