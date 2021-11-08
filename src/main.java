@@ -19,12 +19,20 @@ public class main {
 //        fp2.parseXML();
 //        ArrayList<VariableNode> vn2 = fp2.getData();
 //        System.out.println(vn2);
-        Network N = new Network(file1, "alarm net");
+        String path = "C:\\Users\\adiya\\Documents\\Documents\\Uni\\2SA\\AI\\Project\\input.txt";
+
+        Network N = new Network(path, "alarm net");
         ArrayList<VariableNode> variables = N.getNet();
         System.out.println(N);
 
         int i = N.findNodeIndex("A");
         System.out.println(i);
+
+
+        inputReader ip = new inputReader(path);
+       // System.out.println(ip.bayesBallInput);
+       // System.out.println(ip.bayesBallEvidence);
+
 
     }
 

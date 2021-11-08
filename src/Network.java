@@ -1,19 +1,23 @@
 import java.util.ArrayList;
 
 public class Network {
-    private fileParser fp;
+    //    private fileParser fp;
     private ArrayList<VariableNode> net;
     private String networkName;
+    private inputReader ir;
+// input reader (save instead of file parser)
 
     public Network(String filepath) {
-        fp = new fileParser(filepath);
-        net = fp.getData();
+//        fp = new fileParser(filepath);
+        ir = new inputReader(filepath);
+        net = ir.getData();
         networkName = "";
     }
 
     public Network(String filepath, String networkName) { // option to add network name
-        fp = new fileParser(filepath);
-        net = fp.getData();
+//       fp = new fileParser(filepath);
+        ir = new inputReader(filepath);
+        net = ir.getData();
         this.networkName = networkName;
     }
 

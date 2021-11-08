@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class VariableNode {
     private String name; // variable name
     private ArrayList<String> outcomes; // variable outcomes
-    private boolean isEvidence; // boolean for query
+    private String isEvidence; // for query
     private ArrayList<VariableNode> parents; // GIVEN
     private ArrayList<VariableNode> children;
     private ArrayList<Double> table;
@@ -11,14 +11,17 @@ public class VariableNode {
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
         this.outcomes = outcomes;
-        isEvidence = false;
+        isEvidence = null;
         this.parents = new ArrayList<>();
         this.children = new ArrayList<>();
         this.table = null;
     }
 
     public boolean isEvidence() {
-        return isEvidence;
+        if (isEvidence != null) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isRootNode() {
@@ -41,7 +44,7 @@ public class VariableNode {
         this.children.add(vn);
     }
 
-    public void setEvidence(boolean evidence) {
+    public void setEvidence(String evidence) {
         isEvidence = evidence;
     }
 

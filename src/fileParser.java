@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class fileParser {
-    private String filename;
+ //   private String filename;
     private ArrayList<VariableNode> data;
 
-    public fileParser(String path) {
-        filename = path;
+    public fileParser() {
+ //       filename = path;
         data = new ArrayList<>();
-        parseXML();
+ //       parseXML();
     }
 
-    private void parseXML() {
+    public ArrayList<VariableNode> parseXML(String filename) {
         try {
             Scanner sc = new Scanner(new File(filename));
             while (sc.hasNext()) {
@@ -29,6 +29,7 @@ public class fileParser {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        return data;
     }
 
     private VariableNode parseVariable(Scanner sc) {
@@ -92,7 +93,7 @@ public class fileParser {
         return varIndex;
     }
 
-    public ArrayList<VariableNode> getData() {
-        return data;
-    }
+//    public ArrayList<VariableNode> getData() {
+//        return data;
+//    }
 }
