@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class xpathParser {
-    String filename;
-    HashMap data;
+    private String filename;
+    private HashMap data;
 
     public xpathParser(String filename) {
         this.filename = filename;
@@ -31,7 +31,6 @@ public class xpathParser {
         } catch (XPathExpressionException e) {
             e.printStackTrace();
         }
-
     }
 
     private void readXML() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
@@ -84,6 +83,10 @@ public class xpathParser {
             vn.setTable(table);
             vn.setParents(given);
         }
+    }
+
+    public HashMap getData() {
+        return data;
     }
 
     public static void main(String[] args) {
