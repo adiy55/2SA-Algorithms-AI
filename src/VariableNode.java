@@ -1,24 +1,37 @@
 import java.util.ArrayList;
 
 public class VariableNode {
+
+    enum State { // for marking nodes in bayes ball algorithm
+        UNOBSERVED,
+        PENDING,
+        OBSERVED
+    }
+
     private String name; // variable name
     private ArrayList<String> outcomes; // variable outcomes
-    private String isEvidence; // for query
+    private String evidence; // for query
     private ArrayList<VariableNode> parents; // GIVEN
     private ArrayList<VariableNode> children;
     private ArrayList<Double> table;
+    private State state;
 
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
         this.outcomes = outcomes;
-        isEvidence = null;
+        evidence = null;
         this.parents = new ArrayList<>();
         this.children = new ArrayList<>();
         this.table = null;
+        this.state = State.UNOBSERVED;
+    }
+
+    public void addOutcome(String outcome) {
+        this.outcomes.add(outcome);
     }
 
     public boolean isEvidence() {
-        if (isEvidence != null) {
+        if (evidence != null) {
             return true;
         }
         return false;
@@ -45,7 +58,7 @@ public class VariableNode {
     }
 
     public void setEvidence(String evidence) {
-        isEvidence = evidence;
+        evidence = evidence;
     }
 
     public String getName() {
