@@ -22,13 +22,7 @@ public class xpathParser {
         this.data = new HashMap();
         try {
             readXML();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (XPathExpressionException e) {
+        } catch (ParserConfigurationException | IOException | SAXException | XPathExpressionException e) {
             e.printStackTrace();
         }
     }
@@ -47,12 +41,10 @@ public class xpathParser {
             NodeList currOutcome = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/OUTCOME", i + 1)).evaluate(doc, XPathConstants.NODESET);
             String name = currName.item(0).getTextContent();
             ArrayList<String> outcomes = new ArrayList<>();
-
             for (int j = 0; j < currOutcome.getLength(); j++) {
                 String s = currOutcome.item(j).getTextContent();
                 outcomes.add(s);
             }
-
             VariableNode vn = new VariableNode(name, outcomes);
             data.put(vn.getName(), vn);
         }
@@ -72,14 +64,12 @@ public class xpathParser {
             for (int j = 0; j < tableString.length; j++) {
                 table.add(Double.parseDouble(tableString[j]));
             }
-
             ArrayList<VariableNode> given = new ArrayList<>();
             for (int j = 0; j < currGiven.getLength(); j++) {
                 String s = currGiven.item(j).getTextContent();
                 given.add((VariableNode) data.get(s));
-                ((VariableNode) data.get(s)).addChild((VariableNode) data.get(currName));
+                ((VariableNode) data.get(s)).addChild((VariableNode) data.get(currName.item(0).getTextContent()));
             }
-
             vn.setTable(table);
             vn.setParents(given);
         }
@@ -87,10 +77,5 @@ public class xpathParser {
 
     public HashMap getData() {
         return data;
-    }
-
-    public static void main(String[] args) {
-        xpathParser mp = new xpathParser("src/alarm_net.xml");
-        System.out.println(mp.data);
     }
 }
