@@ -1,44 +1,38 @@
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.util.HashMap;
 
 public class Network {
-    //    private fileParser fp;
-    private ArrayList<VariableNode> net;
-    private String networkName;
-    private inputReader ir;
-// input reader (save instead of file parser)
+    private txtReader reader;
+    private HashMap net;
 
-    public Network(String filepath) {
-//        fp = new fileParser(filepath);
-        ir = new inputReader(filepath);
-        net = ir.getData();
-        networkName = "";
+    public Network(String filepath) throws FileNotFoundException {
+        reader = new txtReader(filepath);
+        net = new xpathParser("src/" + reader.getXml()).getData();
     }
 
-    public Network(String filepath, String networkName) { // option to add network name
-//       fp = new fileParser(filepath);
-        ir = new inputReader(filepath);
-        net = ir.getData();
-        this.networkName = networkName;
+    public txtReader getReader() {
+        return reader;
     }
 
-    public int findNodeIndex(String nodeName) {
-        for (int i = 0; i < net.size(); i++) {
-            if (net.get(i).getName().equals(nodeName)) {
-                return i;
-            }
+    public HashMap getNet() {
+        return net;
+    }
+
+    public void resetVariables() {
+        for (Object v : net.values()) {
+            VariableNode vn = (VariableNode) v;
+            vn.setFromChild(false);
+            vn.setFromParent(false);
+            vn.setEvidence(null);
         }
-        return -1;
     }
 
     public String toString() {
-        String s = "NETWORK: " + networkName;
-        for (VariableNode var : net) {
-            s += "\n" + var.toString();
+        String s = "NETWORK: ";
+        for (Object var : net.values()) {
+            s = s + "\n" + var.toString();
         }
         return s;
     }
 
-    public ArrayList<VariableNode> getNet() {
-        return net;
-    }
 }
