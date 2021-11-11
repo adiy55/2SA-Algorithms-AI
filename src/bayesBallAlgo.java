@@ -19,7 +19,7 @@ public class bayesBallAlgo {
         while (!s.isEmpty()) {
             VariableNode v = (VariableNode) s.pop();
             if (v.getName().equals(input[1])) {
-                return "yes";
+                return "no";
             }
             if (!v.isEvidence()) {
                 if (v.isFromChild()) {
@@ -28,7 +28,7 @@ public class bayesBallAlgo {
                         currParent.setFromChild(true);
                         s.push(currParent);
                     }
-                }  else { //if (v.isFromParent() && (!v.isFromChild())) {
+                } else { // can go to any child
                     for (int i = 0; i < v.getChildren().size(); i++) {
                         VariableNode currChild = v.getChildren().get(i);
                         currChild.setFromParent(true);
@@ -36,17 +36,15 @@ public class bayesBallAlgo {
                     }
                 }
             }
-            if (v.isEvidence()) {
-                if (v.isFromParent()) {
-                    for (int i = 0; i < v.getParents().size(); i++) {
-                        VariableNode currParent = v.getParents().get(i);
-                        currParent.setFromChild(true);
-                        s.push(currParent);
-                    }
+            if (v.isEvidence() && v.isFromParent()) {
+                for (int i = 0; i < v.getParents().size(); i++) {
+                    VariableNode currParent = v.getParents().get(i);
+                    currParent.setFromChild(true);
+                    s.push(currParent);
                 }
             }
         }
-        return "no";
+        return "yes";
     }
 
     public static void main(String[] args) {
@@ -55,13 +53,27 @@ public class bayesBallAlgo {
         // B-E|J=T
         String[] input = new String[]{"B", "E"};
         ArrayList<String> given = new ArrayList<>();
-        given.add("J");
-        VariableNode v = (VariableNode) xp.getData().get("J");
-        v.setEvidence("T");
+//        given.add("J");
+//        VariableNode v = (VariableNode) xp.getData().get("J");
+//        v.setEvidence("T");
 
 
         bayesBallAlgo bb = new bayesBallAlgo(xp.getData(), input, given);
         System.out.println(bb.search());
+
+        String path = "C:\\Users\\adiya\\Desktop\\network.xml";
+        xpathParser xp2 = new xpathParser(path);
+        String[] input2 = new String[]{"L", "B"};
+        ArrayList<String> given2 = new ArrayList<>();
+        given2.add("T'");
+        VariableNode v2 = (VariableNode) xp2.getData().get("T'");
+        v2.setEvidence("T'");
+//        given2.add("R");
+//        v2 = (VariableNode) xp2.getData().get("R");
+//        v2.setEvidence("T");
+
+        bayesBallAlgo bb2 = new bayesBallAlgo(xp2.getData(), input2, given2);
+        System.out.println(bb2.search());
     }
 
 //    private int findNodeIndex() { // returns first index found
