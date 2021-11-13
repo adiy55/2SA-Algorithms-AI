@@ -10,6 +10,7 @@ public class VariableNode {
     private ArrayList<Double> table;
     private boolean isFromChild;
     private boolean isFromParent;
+    private boolean isExplored;
 
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
@@ -18,14 +19,19 @@ public class VariableNode {
         this.parents = new ArrayList<>();
         this.children = new ArrayList<>();
         this.table = null;
-        isFromChild = isFromParent = false;
+        isFromChild = isFromParent = isExplored = false;
     }
 
     public boolean isEvidence() {
-        if (this.evidence != null) {
-            return true;
-        }
-        return false;
+        return this.evidence != null;
+    }
+
+    public boolean isExplored() {
+        return isExplored;
+    }
+
+    public void setExplored(boolean explored) {
+        isExplored = explored;
     }
 
     public boolean isFromChild() {
