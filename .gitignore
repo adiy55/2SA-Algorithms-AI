@@ -27,5 +27,6 @@ src/drafts/
 .idea/
 
 # files
-src/big_net.xml
-src/alarm_net.xml
+big_net.xml
+alarm_net.xml
+network.xml
