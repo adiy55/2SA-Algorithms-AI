@@ -1,4 +1,6 @@
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
 
 public class bayesBallAlgo {
@@ -44,6 +46,44 @@ public class bayesBallAlgo {
         return "yes";
     }
 
+    public String search2() {
+        Queue<VariableNode> q = new LinkedList<>();
+        q.add(data.get(input[0]));
+        while (!q.isEmpty()) {
+            VariableNode v = q.poll();
+            if (v.getName().equals(input[1])) {
+                return "no";
+            }
+            if (!v.isExplored()) {
+                v.setExplored(true);
+                if (!v.isEvidence()) {
+                    if (v.isFromChild()) {
+                        for (int i = 0; i < v.getParents().size(); i++) {
+                            VariableNode currParent = v.getParents().get(i);
+                            currParent.setFromChild(true);
+                            q.add(currParent);
+                        }
+                    }
+                    if (v.isFromChild() && !v.isFromParent()) { // can go to any child
+                        for (int i = 0; i < v.getChildren().size(); i++) {
+                            VariableNode currChild = v.getChildren().get(i);
+                            currChild.setFromParent(true);
+                            q.add(currChild);
+                        }
+                    }
+                }
+                if (v.isEvidence() && v.isFromParent() && !v.isFromChild()) {
+                    for (int i = 0; i < v.getParents().size(); i++) {
+                        VariableNode currParent = v.getParents().get(i);
+                        currParent.setFromChild(true);
+                        q.add(currParent);
+                    }
+                }
+            }
+        }
+        return "yes";
+    }
+
     public static void main(String[] args) {
         xpathParser xp = new xpathParser("alarm_net.xml");
         // B-E|
@@ -55,6 +95,7 @@ public class bayesBallAlgo {
 
         bayesBallAlgo bb = new bayesBallAlgo(xp.getData(), input);
         System.out.println(bb.search());
+        System.out.println(bb.search2());
 
         // ---------------------
 
@@ -67,6 +108,7 @@ public class bayesBallAlgo {
 
         bayesBallAlgo bb2 = new bayesBallAlgo(xp2.getData(), input2);
         System.out.println(bb2.search());
+        System.out.println(bb2.search2());
     }
 
 //    private int findNodeIndex() { // returns first index found
