@@ -3,11 +3,11 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
-public class bayesBallAlgo {
+public class BayesBallAlgo {
     private HashMap<String, VariableNode> data;
     private String[] input;
 
-    public bayesBallAlgo(HashMap<String, VariableNode> data, String[] input) {
+    public BayesBallAlgo(HashMap<String, VariableNode> data, String[] input) {
         this.data = data;
         this.input = input;
     }
@@ -93,7 +93,7 @@ public class bayesBallAlgo {
         v.setEvidence("T");
 
 
-        bayesBallAlgo bb = new bayesBallAlgo(xp.getData(), input);
+        BayesBallAlgo bb = new BayesBallAlgo(xp.getData(), input);
         System.out.println(bb.search());
         System.out.println(bb.search2());
 
@@ -106,7 +106,7 @@ public class bayesBallAlgo {
 //        v2 = (VariableNode) xp2.getData().get("R");
 //        v2.setEvidence("T");
 
-        bayesBallAlgo bb2 = new bayesBallAlgo(xp2.getData(), input2);
+        BayesBallAlgo bb2 = new BayesBallAlgo(xp2.getData(), input2);
         System.out.println(bb2.search());
         System.out.println(bb2.search2());
     }
