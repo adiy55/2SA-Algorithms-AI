@@ -2,19 +2,19 @@ import java.util.HashMap;
 import java.util.Stack;
 
 public class bayesBallAlgo {
-    private HashMap data;
+    private HashMap<String, VariableNode> data;
     private String[] input;
 
-    public bayesBallAlgo(HashMap data, String[] input) {
+    public bayesBallAlgo(HashMap<String, VariableNode> data, String[] input) {
         this.data = data;
         this.input = input;
     }
 
     private String search() { // DFS
-        Stack s = new Stack();
+        Stack<VariableNode> s = new Stack<>();
         s.push(data.get(input[0]));
         while (!s.isEmpty()) {
-            VariableNode v = (VariableNode) s.pop();
+            VariableNode v = s.pop();
             if (v.getName().equals(input[1])) {
                 return "no";
             }
@@ -22,28 +22,22 @@ public class bayesBallAlgo {
                 if (v.isFromChild()) {
                     for (int i = 0; i < v.getParents().size(); i++) {
                         VariableNode currParent = v.getParents().get(i);
-//                        if (!currParent.isFromParent() && !currParent.isFromChild()) {
                         currParent.setFromChild(true);
                         s.push(currParent);
-//                        }
                     }
                 } else { // can go to any child
                     for (int i = 0; i < v.getChildren().size(); i++) {
                         VariableNode currChild = v.getChildren().get(i);
-//                        if (!currChild.isFromParent() && !currChild.isFromChild()) {
                         currChild.setFromParent(true);
                         s.push(currChild);
-//                        }
                     }
                 }
             }
             if (v.isEvidence() && v.isFromParent()) {
                 for (int i = 0; i < v.getParents().size(); i++) {
                     VariableNode currParent = v.getParents().get(i);
-//                    if (!currParent.isFromParent() && !currParent.isFromChild()) {
                     currParent.setFromChild(true);
                     s.push(currParent);
-//                    }
                 }
             }
         }
@@ -51,11 +45,11 @@ public class bayesBallAlgo {
     }
 
     public static void main(String[] args) {
-        xpathParser xp = new xpathParser("src/alarm_net.xml");
+        xpathParser xp = new xpathParser("alarm_net.xml");
         // B-E|
         // B-E|J=T
         String[] input = new String[]{"B", "E"};
-        VariableNode v = (VariableNode) xp.getData().get("J");
+        VariableNode v = xp.getData().get("J");
         v.setEvidence("T");
 
 
@@ -64,8 +58,7 @@ public class bayesBallAlgo {
 
         // ---------------------
 
-        String path = "C:\\Users\\adiya\\Desktop\\network.xml";
-        xpathParser xp2 = new xpathParser(path);
+        xpathParser xp2 = new xpathParser("network.xml");
         String[] input2 = new String[]{"L", "B"};
 //        VariableNode v2 = (VariableNode) xp2.getData().get("T'");
 //        v2.setEvidence("T'");

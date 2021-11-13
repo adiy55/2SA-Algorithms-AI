@@ -50,8 +50,15 @@ public class txtReader {
         String s = "P(B=T|E=T)";
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s);
-        while (m.find()) {
-            System.out.println(m.group(1));
+        m.find();
+        String s2 = m.group(1);
+        System.out.println(s2);
+        Pattern p2 = Pattern.compile("\\(([^|]+)\\)", Pattern.CASE_INSENSITIVE);
+        Matcher m2 = p2.matcher(s2);
+//        m2.find();
+//        System.out.println(m2.group(0));
+        while (m2.find()) {
+            System.out.println(m2.group(1));
         }
     }
 

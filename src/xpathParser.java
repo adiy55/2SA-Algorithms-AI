@@ -15,11 +15,11 @@ import java.util.HashMap;
 
 public class xpathParser {
     private String filename;
-    private HashMap data;
+    private HashMap<String, VariableNode> data;
 
     public xpathParser(String filename) {
         this.filename = filename;
-        this.data = new HashMap();
+        this.data = new HashMap<>();
         try {
             readXML();
         } catch (ParserConfigurationException | IOException | SAXException | XPathExpressionException e) {
@@ -57,25 +57,25 @@ public class xpathParser {
             NodeList currTable = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/TABLE", i + 1)).evaluate(doc, XPathConstants.NODESET);
             NodeList currGiven = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/GIVEN", i + 1)).evaluate(doc, XPathConstants.NODESET);
 
-            VariableNode vn = (VariableNode) data.get(currName.item(0).getTextContent()); // current node
+            VariableNode vn = data.get(currName.item(0).getTextContent()); // current node
             String[] tableString = currTable.item(0).getTextContent().split(" ");
 
             ArrayList<Double> table = new ArrayList<>();
-            for (int j = 0; j < tableString.length; j++) {
-                table.add(Double.parseDouble(tableString[j]));
+            for (String value : tableString) {
+                table.add(Double.parseDouble(value));
             }
             ArrayList<VariableNode> given = new ArrayList<>();
             for (int j = 0; j < currGiven.getLength(); j++) {
                 String s = currGiven.item(j).getTextContent();
-                given.add((VariableNode) data.get(s));
-                ((VariableNode) data.get(s)).addChild((VariableNode) data.get(currName.item(0).getTextContent()));
+                given.add(data.get(s));
+                data.get(s).addChild(data.get(currName.item(0).getTextContent()));
             }
             vn.setTable(table);
             vn.setParents(given);
         }
     }
 
-    public HashMap getData() {
+    public HashMap<String, VariableNode> getData() {
         return data;
     }
 }

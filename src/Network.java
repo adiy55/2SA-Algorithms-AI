@@ -3,27 +3,26 @@ import java.util.HashMap;
 
 public class Network {
     private txtReader reader;
-    private HashMap net;
+    private HashMap<String, VariableNode> net;
 
     public Network(String filepath) throws FileNotFoundException {
         reader = new txtReader(filepath);
-        net = new xpathParser("src/" + reader.getXml()).getData();
+        net = new xpathParser(reader.getXml()).getData();
     }
 
     public txtReader getReader() {
         return reader;
     }
 
-    public HashMap getNet() {
+    public HashMap<String, VariableNode> getNet() {
         return net;
     }
 
     public void resetVariables() {
-        for (Object v : net.values()) {
-            VariableNode vn = (VariableNode) v;
-            vn.setFromChild(false);
-            vn.setFromParent(false);
-            vn.setEvidence(null);
+        for (VariableNode v : net.values()) {
+            v.setFromChild(false);
+            v.setFromParent(false);
+            v.setEvidence(null);
         }
     }
 
