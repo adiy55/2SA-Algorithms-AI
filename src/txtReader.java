@@ -1,5 +1,4 @@
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -10,11 +9,13 @@ public class txtReader {
     private String xml;
     private ArrayList<String> bayesBallInput;
     private ArrayList<String> varEliminationInput;
+    private File output;
 
     public txtReader(String filename) throws FileNotFoundException {
         this.filename = filename;
         this.bayesBallInput = new ArrayList<>();
         this.varEliminationInput = new ArrayList<>();
+        this.output = new File("output.txt");
         readFile();
     }
 
@@ -28,11 +29,19 @@ public class txtReader {
             if (currLine.contains("P(")) {
                 varEliminationInput.add(currLine);
             }
-            if(!currLine.contains("P(") && !currLine.contains(".xml")){
+            if (!currLine.contains("P(") && !currLine.contains(".xml")) {
                 bayesBallInput.add(currLine);
             }
         }
     }
+
+//    public void fileWriter(String message) throws IOException {
+//        FileWriter fw = new FileWriter(this.output, true);
+//        BufferedWriter bw = new BufferedWriter(fw);
+//        bw.write(message);
+//        bw.close();
+//
+//    }
 
     public String getXml() {
         return xml;
@@ -50,16 +59,11 @@ public class txtReader {
         String s = "P(B=T|E=T)";
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s);
-        m.find();
+        while (m.find()) {
+            System.out.println(m.group(1));
+        }
         String s2 = m.group(1);
         System.out.println(s2);
-        Pattern p2 = Pattern.compile("\\(([^|]+)\\)", Pattern.CASE_INSENSITIVE);
-        Matcher m2 = p2.matcher(s2);
-//        m2.find();
-//        System.out.println(m2.group(0));
-        while (m2.find()) {
-            System.out.println(m2.group(1));
-        }
     }
 
 }
