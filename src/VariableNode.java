@@ -21,6 +21,10 @@ public class VariableNode {
         isFromChild = isFromParent = false;
     }
 
+    public boolean isRootNode() {
+        return (parents.isEmpty());
+    }
+
     public String getEvidence() {
         return evidence;
     }
