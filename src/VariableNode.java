@@ -10,6 +10,7 @@ public class VariableNode {
     private ArrayList<Double> table;
     private boolean isFromChild;
     private boolean isFromParent;
+    private CPT cpt;
 
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
@@ -19,6 +20,15 @@ public class VariableNode {
         this.children = new ArrayList<>();
         this.table = null;
         isFromChild = isFromParent = false;
+        this.cpt = null;
+    }
+
+    public CPT getCpt() {
+        return cpt;
+    }
+
+    public void setCpt(CPT cpt) {
+        this.cpt = cpt;
     }
 
     public boolean isRootNode() {
@@ -97,7 +107,7 @@ public class VariableNode {
             }
             s += "";
         }
-        s += ", TABLE:" + table + "}";
+        s += ", TABLE:" + table + ", OUTCOME:" + evidence + "}";
         return s;
     }
 }
