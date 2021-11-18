@@ -3,22 +3,37 @@ import java.util.Stack;
 
 public class BayesBallAlgo {
     private HashMap<String, VariableNode> data;
-    private String[] input;
+    private String input;
+    private String[] query_nodes;
 
-    public BayesBallAlgo(HashMap<String, VariableNode> data, String[] input) {
+    public BayesBallAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data;
         this.input = input;
+        parseInput();
+    }
+
+    private void parseInput() {
+        String[] s = input.split("\\|");
+        String[] query_node_names = s[0].split("-");
+        if (s.length > 1) {
+            String[] given_nodes = s[1].split(",");
+            for (String given_node : given_nodes) {
+                String[] tmp = given_node.split("=");
+                data.get(tmp[0]).setEvidence(tmp[1]);
+            }
+        }
+        this.query_nodes = query_node_names;
     }
 
     public String search() { // DFS
         Stack<VariableNode> s = new Stack<>();
-        VariableNode v = data.get(input[0]);
+        VariableNode v = data.get(query_nodes[0]);
         s.push(v);
         add_children(s, v);
         add_parents(s, v);
         while (!s.isEmpty()) {
             v = s.pop();
-            if (v.getName().equals(input[1])) {
+            if (v.getName().equals(query_nodes[1])) {
                 return "no";
             }
             if (!v.isEvidence()) {
@@ -55,28 +70,32 @@ public class BayesBallAlgo {
         xpathParser xp = new xpathParser("alarm_net.xml");
         // B-E|
         // B-E|J=T
-        String[] input = new String[]{"B", "E"};
+//        String[] input = new String[]{"B", "E"};
+        String s = "B-E|";
 //        xp.getData().get("J").setEvidence("T");
 
-//        BayesBallAlgo bb = new BayesBallAlgo(xp.getData(), input);
-//        System.out.println(bb.search());
+        BayesBallAlgo bb = new BayesBallAlgo(xp.getData(), s);
+        System.out.println(bb.search());
 //        System.out.println(bb.search2());
 
         // ---------------------
 
         xpathParser xp2 = new xpathParser("network.xml");
+
         String[] input2 = new String[]{"L", "B"};
         xp2.getData().get("D").setEvidence("T");
 //        xp2.getData().get("T").setEvidence("T");
 //        xp2.getData().get("R").setEvidence("T");
 
 
-        BayesBallAlgo bb2 = new BayesBallAlgo(xp2.getData(), input2);
+//        BayesBallAlgo bb2 = new BayesBallAlgo(xp2.getData(), );
 //        System.out.println(bb2.search4());
-        System.out.println(bb2.search());
+//        System.out.println(bb2.search());
+
     }
 
 }
+
 
 //    private String search4() {
 //        Queue<VariableNode> s = new LinkedList<>();

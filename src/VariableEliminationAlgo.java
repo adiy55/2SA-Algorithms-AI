@@ -1,65 +1,106 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VariableEliminationAlgo {
     private HashMap<String, VariableNode> data;
+    private String input;
     private String[] query;
-    private String[] evidence;
+//    private String[] evidence;
     private String[] hidden;
 
-    public VariableEliminationAlgo(HashMap<String, VariableNode> data, String[] query, String[] evidence, String[] hidden) {
+    //P(B=T|J=T,M=T) A-E
+
+    public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data; // deep copy of data
-        this.query = query;
-        this.evidence = evidence;
-        this.hidden = hidden;
-        set_evidence();
+        this.input = input;
+        parseInput();
     }
 
-    private void set_evidence() {
-        for (String s : evidence) {
-            String[] curr = s.split("=");
-            VariableNode curr_var = data.get(curr[0]);
-            curr_var.setEvidence(curr[1]);
-            update_tables(curr[0]);
+    private void parseInput() {
+        String[] s = input.split(" ");
+        hidden = s[1].split("-");
+        Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(s[0]);
+        String inside_parenthesis = "";
+        while(m.find()){
+            inside_parenthesis = m.group(1);
         }
-    }
-
-    private void update_tables(String var_name) { // var_name of evidence node
-        VariableNode v = data.get(var_name);
-        if (!v.isRootNode()) {
-            int outcome_index = -1;
-            for (int i = 0; i < v.getOutcomes().size(); i++) {
-                if (v.getOutcomes().get(i).equals(v.getEvidence())) { // find index of evidence in outcomes list
-                    outcome_index = i;
-                    break;
-                }
-            }
-            if (outcome_index > -1) {
-                ArrayList<Integer> res = get_table_indices(v, outcome_index);
-                ArrayList<Double> new_table = new ArrayList<>();
-                for (Integer re : res) {
-                    new_table.add(v.getTable().get(re));
-                }
-                v.setTable(new_table);
+        String[] query_evidence = inside_parenthesis.split("\\|");
+        query = query_evidence[0].split("=");
+        if (query_evidence.length > 1) {
+            String[] given_nodes = query_evidence[1].split(",");
+            for (String given_node : given_nodes) {
+                String[] tmp = given_node.split("=");
+                data.get(tmp[0]).setEvidence(tmp[1]);
             }
         }
     }
+//
+//    private void set_evidence() {
+//        for (String s : evidence) {
+//            String[] curr = s.split("=");
+//            VariableNode curr_var = data.get(curr[0]);
+//            curr_var.setEvidence(curr[1]);
+////            update_tables(curr[0]);
+//        }
+//    }
 
-    public ArrayList<Integer> get_table_indices(VariableNode v, int outcome_index) {
+//    private void update_tables(String var_name) { // var_name of evidence node
+//        VariableNode v = data.get(var_name);
+//        if (!v.isRootNode()) {
+//            int outcome_index = -1;
+//            for (int i = 0; i < v.getOutcomes().size(); i++) {
+//                if (v.getOutcomes().get(i).equals(v.getEvidence())) { // find index of evidence in outcomes list
+//                    outcome_index = i;
+//                    break;
+//                }
+//            }
+//            if (outcome_index > -1) {
+//                ArrayList<Integer> res = get_table_indices(v, outcome_index);
+//                ArrayList<Double> new_table = new ArrayList<>();
+//                for (Integer re : res) {
+//                    new_table.add(v.getTable().get(re));
+//                }
+//                v.setTable(new_table);
+//            }
+//        }
+//    }
+
+
+    /*
+    variable node of table that needs to be updated
+    name of node needed (current or parent)
+    outcome string
+
+
+    if current -> alternate outcomes
+
+    if parent -> get parents, multiply by the number of outcomes until parent is found
+
+
+
+
+     */
+
+    public ArrayList<Integer> get_table_indices(VariableNode v, int outcome_index) { // v is the current node, outcome_index is the outcome needed
         ArrayList<Integer> res = new ArrayList<>();
-        int div = v.getOutcomes().size();
+        int div = 1;
         for (int i = 0; i < v.getParents().size(); i++) {
             VariableNode parent = v.getParents().get(i);
+            div *= parent.getOutcomes().size();
             for (int j = 0; j < parent.getChildren().size(); j++) {
                 if (parent.getChildren().get(j).getName().equals(v.getName())) {
                     break;
                 }
                 div *= parent.getOutcomes().size();
             }
+
+            // need to get indices of current list too!
             int step = v.getTable().size() / div;
             int index = outcome_index * step; // start index of outcome in table
             while (index < v.getTable().size()) {
-//                v.getTable().remove(index);
                 res.add(index);
                 index++;
                 if (index % step == 0) {
@@ -73,11 +114,11 @@ public class VariableEliminationAlgo {
     public static void main(String[] args) {
         xpathParser xp = new xpathParser("alarm_net.xml");
         String[] query = new String[]{"B=T"};
-        String[] evidence = new String[]{"J=T", "M=T"};
-        String[] hidden = new String[]{"A", "E"};
-        VariableEliminationAlgo ve = new VariableEliminationAlgo(xp.getData(), query, evidence, hidden);
+        String[] evidence = new String[]{"E=T", "M=T"};
+        String[] hidden = new String[]{"A", "J"};
+        String s= "P(B=T|J=T,M=T) A-E";
+        VariableEliminationAlgo ve = new VariableEliminationAlgo(xp.getData(), s);
         System.out.println(ve.data);
-
     }
 
 //    private void is_independent() {
