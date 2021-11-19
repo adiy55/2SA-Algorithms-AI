@@ -12,7 +12,7 @@ public class Network {
         net = parser.getData();
         queries = parser.getQueries();
         results = new ArrayList<>();
-        runQueries();
+//        runQueries();
     }
 
     public void runQueries() {
@@ -41,6 +41,10 @@ public class Network {
 
     public ArrayList<String> getResults() {
         return results;
+    }
+
+    public HashMap<String, VariableNode> getNet() {
+        return net;
     }
 
     public String toString() {
