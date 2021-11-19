@@ -95,6 +95,11 @@ public class VariableNode {
         return outcomes;
     }
 
+    public int getEvidenceIndex() {
+        return outcomes.indexOf(evidence);
+    }
+
+
     public String toString() {
         String s = "{NAME: " + name + ", OUTCOME:";
         for (String value : outcomes) {
