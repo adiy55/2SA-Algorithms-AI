@@ -1,21 +1,33 @@
-import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Network {
-    private txtReader reader;
+    private FileParser parser;
     private HashMap<String, VariableNode> net;
+    private ArrayList<String> queries;
+    private ArrayList<String> results;
 
-    public Network(String filepath) throws FileNotFoundException {
-        reader = new txtReader(filepath);
-        net = new xpathParser(reader.getXml()).getData();
+    public Network(String filepath) {
+        parser = new FileParser(filepath);
+        net = parser.getData();
+        queries = parser.getQueries();
+        results = new ArrayList<>();
+        runQueries();
     }
 
-    public txtReader getReader() {
-        return reader;
-    }
-
-    public HashMap<String, VariableNode> getNet() {
-        return net;
+    public void runQueries() {
+        for (String curr_query : queries) {
+            if (curr_query.contains("P(")) {
+                VariableEliminationAlgo vea = new VariableEliminationAlgo(net, curr_query);
+                String res = vea.RunAlgo();
+                results.add(res);
+            } else {
+                BayesBallAlgo bba = new BayesBallAlgo(net, curr_query);
+                String res = bba.RunAlgo();
+                results.add(res);
+            }
+            resetVariables();
+        }
     }
 
     public void resetVariables() {
@@ -23,7 +35,12 @@ public class Network {
             v.setFromChild(false);
             v.setFromParent(false);
             v.setEvidence(null);
+            v.setCpt(null);
         }
+    }
+
+    public ArrayList<String> getResults() {
+        return results;
     }
 
     public String toString() {
@@ -33,5 +50,4 @@ public class Network {
         }
         return s;
     }
-
 }
