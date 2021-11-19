@@ -112,7 +112,7 @@ public class VariableNode {
             }
             s += "";
         }
-        s += ", TABLE:" + table + ", OUTCOME:" + evidence + "}";
+        s += ", TABLE:" + table + "}";
         return s;
     }
 }
