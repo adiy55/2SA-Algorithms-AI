@@ -34,7 +34,7 @@ public class FileParser {
         Scanner sc = new Scanner(new File(filename));
         while (sc.hasNext()) {
             String currLine = sc.nextLine();
-            if (currLine.contains(".xml")) {
+            if (currLine.endsWith(".xml")) {
                 readXML(currLine);
             } else {
                 queries.add(currLine);
