@@ -1,7 +1,7 @@
 import java.util.HashMap;
 import java.util.Stack;
 
-public class BayesBallAlgo {
+public class BayesBallAlgo implements NetworkAlgo {
     private HashMap<String, VariableNode> data;
     private String input;
     private String[] query_nodes;
@@ -25,7 +25,12 @@ public class BayesBallAlgo {
         this.query_nodes = query_node_names;
     }
 
-    public String search() { // DFS
+    @Override
+    public String RunAlgo() {
+        return search();
+    }
+
+    private String search() { // DFS
         Stack<VariableNode> s = new Stack<>();
         VariableNode v = data.get(query_nodes[0]);
         s.push(v);
@@ -64,34 +69,6 @@ public class BayesBallAlgo {
             currChild.setFromParent(true);
             s.push(currChild);
         }
-    }
-
-    public static void main(String[] args) {
-        xpathParser xp = new xpathParser("alarm_net.xml");
-        // B-E|
-        // B-E|J=T
-//        String[] input = new String[]{"B", "E"};
-        String s = "B-E|";
-//        xp.getData().get("J").setEvidence("T");
-
-        BayesBallAlgo bb = new BayesBallAlgo(xp.getData(), s);
-        System.out.println(bb.search());
-//        System.out.println(bb.search2());
-
-        // ---------------------
-
-        xpathParser xp2 = new xpathParser("network.xml");
-
-        String[] input2 = new String[]{"L", "B"};
-        xp2.getData().get("D").setEvidence("T");
-//        xp2.getData().get("T").setEvidence("T");
-//        xp2.getData().get("R").setEvidence("T");
-
-
-//        BayesBallAlgo bb2 = new BayesBallAlgo(xp2.getData(), );
-//        System.out.println(bb2.search4());
-//        System.out.println(bb2.search());
-
     }
 
 }

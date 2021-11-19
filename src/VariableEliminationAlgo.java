@@ -1,21 +1,25 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VariableEliminationAlgo {
+public class VariableEliminationAlgo implements NetworkAlgo {
     private HashMap<String, VariableNode> data;
     private String input;
     private String[] query;
 //    private String[] evidence;
     private String[] hidden;
 
-    //P(B=T|J=T,M=T) A-E
-
     public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data; // deep copy of data
         this.input = input;
         parseInput();
+//        init_cpt();
+    }
+
+    @Override
+    public String RunAlgo() {
+
+        return null;
     }
 
     private void parseInput() {
@@ -37,15 +41,14 @@ public class VariableEliminationAlgo {
             }
         }
     }
-//
-//    private void set_evidence() {
-//        for (String s : evidence) {
-//            String[] curr = s.split("=");
-//            VariableNode curr_var = data.get(curr[0]);
-//            curr_var.setEvidence(curr[1]);
-////            update_tables(curr[0]);
-//        }
-//    }
+
+    private void init_cpt(){
+        for (VariableNode v: data.values()){
+            v.setCpt(new CPT(v));
+        }
+
+    }
+
 
 //    private void update_tables(String var_name) { // var_name of evidence node
 //        VariableNode v = data.get(var_name);
@@ -84,35 +87,35 @@ public class VariableEliminationAlgo {
 
      */
 
-    public ArrayList<Integer> get_table_indices(VariableNode v, int outcome_index) { // v is the current node, outcome_index is the outcome needed
-        ArrayList<Integer> res = new ArrayList<>();
-        int div = 1;
-        for (int i = 0; i < v.getParents().size(); i++) {
-            VariableNode parent = v.getParents().get(i);
-            div *= parent.getOutcomes().size();
-            for (int j = 0; j < parent.getChildren().size(); j++) {
-                if (parent.getChildren().get(j).getName().equals(v.getName())) {
-                    break;
-                }
-                div *= parent.getOutcomes().size();
-            }
-
-            // need to get indices of current list too!
-            int step = v.getTable().size() / div;
-            int index = outcome_index * step; // start index of outcome in table
-            while (index < v.getTable().size()) {
-                res.add(index);
-                index++;
-                if (index % step == 0) {
-                    index += (step * (v.getOutcomes().size() - 1));
-                }
-            }
-        }
-        return res;
-    }
+//    public ArrayList<Integer> get_table_indices(VariableNode v, int outcome_index) { // v is the current node, outcome_index is the outcome needed
+//        ArrayList<Integer> res = new ArrayList<>();
+//        int div = 1;
+//        for (int i = 0; i < v.getParents().size(); i++) {
+//            VariableNode parent = v.getParents().get(i);
+//            div *= parent.getOutcomes().size();
+//            for (int j = 0; j < parent.getChildren().size(); j++) {
+//                if (parent.getChildren().get(j).getName().equals(v.getName())) {
+//                    break;
+//                }
+//                div *= parent.getOutcomes().size();
+//            }
+//
+//            // need to get indices of current list too!
+//            int step = v.getTable().size() / div;
+//            int index = outcome_index * step; // start index of outcome in table
+//            while (index < v.getTable().size()) {
+//                res.add(index);
+//                index++;
+//                if (index % step == 0) {
+//                    index += (step * (v.getOutcomes().size() - 1));
+//                }
+//            }
+//        }
+//        return res;
+//    }
 
     public static void main(String[] args) {
-        xpathParser xp = new xpathParser("alarm_net.xml");
+        FileParser xp = new FileParser("alarm_net.xml");
         String[] query = new String[]{"B=T"};
         String[] evidence = new String[]{"E=T", "M=T"};
         String[] hidden = new String[]{"A", "J"};
@@ -120,6 +123,7 @@ public class VariableEliminationAlgo {
         VariableEliminationAlgo ve = new VariableEliminationAlgo(xp.getData(), s);
         System.out.println(ve.data);
     }
+
 
 //    private void is_independent() {
 //        VariableNode q = data.get(query[0]);
