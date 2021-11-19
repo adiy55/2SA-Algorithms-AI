@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -6,14 +7,18 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     private HashMap<String, VariableNode> data;
     private String input;
     private String[] query;
-//    private String[] evidence;
     private String[] hidden;
 
     public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
-        this.data = data; // deep copy of data
+        this.data = data;
         this.input = input;
         parseInput();
-//        init_cpt();
+        init_cpt();
+        ArrayList<Double> res = join(data.get("M").getCpt(), data.get("J").getCpt(), "A");
+        System.out.println(res);
+        data.get("J").getCpt().setTable(res);
+        res = join(data.get("A").getCpt(), data.get("J").getCpt(), "A");
+        System.out.println(res);
     }
 
     @Override
@@ -28,7 +33,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s[0]);
         String inside_parenthesis = "";
-        while(m.find()){
+        while (m.find()) {
             inside_parenthesis = m.group(1);
         }
         String[] query_evidence = inside_parenthesis.split("\\|");
@@ -42,13 +47,41 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
     }
 
-    private void init_cpt(){
-        for (VariableNode v: data.values()){
+    private void init_cpt() {
+        for (VariableNode v : data.values()) {
             v.setCpt(new CPT(v));
         }
-
     }
 
+    private ArrayList<Double> join(CPT cpt1, CPT cpt2, String hidden) { // cpt1.table.size >= cpt2.table.size
+        // find step for the hidden variable in each cpt table
+        int count1, count2;
+        count1 = count2 = data.get(hidden).getOutcomes().size();
+        for (int i = 0; i < cpt1.getVar_names().indexOf(hidden); i++) {
+            count1 *= data.get(cpt1.getVar_names().get(i)).getOutcomes().size();
+        }
+        for (int i = 0; i < cpt2.getVar_names().indexOf(hidden); i++) {
+            count2 *= data.get(cpt2.getVar_names().get(i)).getOutcomes().size();
+        }
+        // multiply according to the alternations in the step size
+        int table1 = cpt1.getTable().size();
+        int table2 = cpt2.getTable().size();
+        int step1 = table1 / count1;
+        int step2 = table2 / count2;
+        int counter = 0;
+        ArrayList<Double> new_table = new ArrayList<>();
+        for (int i = 0; i < table1; i++) {
+            if (i > 0 && i % step1 == 0) {
+                counter += step2;
+                if (counter >= table2) {
+                    counter = 0;
+                }
+            }
+            new_table.add(cpt1.getTable().get(i) * cpt2.getTable().get(counter));
+
+        }
+        return new_table;
+    }
 
 //    private void update_tables(String var_name) { // var_name of evidence node
 //        VariableNode v = data.get(var_name);
@@ -115,13 +148,11 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 //    }
 
     public static void main(String[] args) {
-        FileParser xp = new FileParser("alarm_net.xml");
-        String[] query = new String[]{"B=T"};
-        String[] evidence = new String[]{"E=T", "M=T"};
-        String[] hidden = new String[]{"A", "J"};
-        String s= "P(B=T|J=T,M=T) A-E";
-        VariableEliminationAlgo ve = new VariableEliminationAlgo(xp.getData(), s);
-        System.out.println(ve.data);
+        Network net = new Network("input.txt");
+        String s = "P(B=T|J=T,M=T) A-E";
+        VariableEliminationAlgo ve = new VariableEliminationAlgo(net.getNet(), s);
+
+
     }
 
 
