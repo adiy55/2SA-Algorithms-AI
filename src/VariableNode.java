@@ -99,6 +99,11 @@ public class VariableNode {
         return outcomes.indexOf(evidence);
     }
 
+    public void initCPT() {
+        ArrayList<VariableNode> variableNodes = new ArrayList<>(parents);
+        variableNodes.add(this);
+        cpt = new CPT(table, variableNodes);
+    }
 
     public String toString() {
         String s = "{NAME: " + name + ", OUTCOME:";
