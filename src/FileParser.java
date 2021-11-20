@@ -87,6 +87,7 @@ public class FileParser {
             }
             vn.setTable(table);
             vn.setParents(given);
+            vn.initCPT();
         }
     }
 
