@@ -1,51 +1,45 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CPT {
-    private ArrayList<Double> table;
-    private ArrayList<String> var_names;
+    private ArrayList<HashMap<String, String>> rows;
 
-    public CPT(VariableNode v) {
-        this.var_names = new ArrayList<>();
-        this.table = new ArrayList<>();
-        for (int i = 0; i < v.getParents().size(); i++) {
-            var_names.add(v.getParents().get(i).getName());
+    public CPT(ArrayList<Double> table, ArrayList<VariableNode> variableNodes) {
+        this.rows = new ArrayList<>();
+        for (int i = 0; i < table.size(); i++) {
+            rows.add(new HashMap<>());
         }
-        if (v.isEvidence()) {
-            table_filter(v);
-        } else {
-            table.addAll(v.getTable());
-            var_names.add(v.getName()); // name of node used
+        initRows(variableNodes, table);
+        System.out.println(rows);
+    }
+
+    private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
+        int div = 1, step;
+        for (VariableNode variableNode : variableNodes) {
+            int n_outcome = 0;
+            div *= variableNode.getOutcomes().size();
+            step = table.size() / div;
+            for (int j = 0; j < table.size(); j++) {
+                if (j > 0 && j % step == 0) {
+                    n_outcome++;
+                }
+                if (n_outcome >= variableNode.getOutcomes().size()) {
+                    n_outcome = 0;
+                }
+                rows.get(j).put(variableNode.getName(), variableNode.getOutcomes().get(n_outcome));
+            }
+        }
+        for (int i = 0; i < table.size(); i++) {
+            rows.get(i).put("P", table.get(i).toString());
         }
     }
 
-    // check if node is evidence / if children are evidence and remove from table
+    public static void main(String[] args) {
+        Network net = new Network("input.txt");
+        System.out.println(net);
 
-    private void table_filter(VariableNode v) { // filters evidence nodes table
-        int start_index = v.getEvidenceIndex();
-        ArrayList<Double> new_table = new ArrayList<>();
-        for (int i = start_index; i < v.getTable().size(); i += v.getOutcomes().size()) {
-            new_table.add(v.getTable().get(i));
-        }
-        if (new_table.size() > 1) {
-            table = new_table;
-        }
     }
 
-    public ArrayList<String> getVar_names() {
-        return var_names;
-    }
-
-    public void setVar_names(ArrayList<String> var_names) {
-        this.var_names = var_names;
-    }
-
-    public ArrayList<Double> getTable() {
-        return table;
-    }
-
-    public void setTable(ArrayList<Double> table) {
-        this.table = table;
-    }
 }
 
     /*
@@ -53,52 +47,6 @@ public class CPT {
     - check if both cpts include the same variable
     -
      */
-
-    /*
-    count1 = count2 = 1
-    CPT new_cpt = new CPT()
-    for i=0; i<cpt1.var_names; i++
-        count1 *= data.var_names(i)
-        for j=0; j<cpt2.var_names; j++
-            count2 *= data.var_names(j)
-            step1 = count1
-            step2 = count2
-            if cpt1.var_names.get(i) == cpt2.var_names.get(j)
-                -----JOIN
-
-                table.add(cpt1.table.get(step1) * cpt2.table.get(step2))
-                step1 += count1
-                step2 += count2
-            else
-                for k=0; k<cpt1.var_names.get(i).outcomes.len; k++
-                    table.add(cpt1.table.get(step1) * cpt2.table.get(step2))
-                    step1 += count1
-                    step2 += count2
-
-
-
-    count1++
-    count2++
-     */
-
-//    private void table_filter(VariableNode v) {
-//        ArrayList<Double> curr_table = v.getTable();
-//        ArrayList<VariableNode> curr_children = v.getChildren(); // need to remove from children tables
-//        for (VariableNode child : curr_children) {
-//            if (child.isEvidence()) {
-//
-//
-//            }
-//        }
-//
-//    }
-
-//    private int find_outcome_index(VariableNode v) {
-//        int outcome_index = -1;
-//        for (int i = 0; i < v.getOutcomes().size(); i++) {
-//
-//        }
-//    }
 
     /*
     save cpt only with relevant rows (according to evidence)
