@@ -1,16 +1,19 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class CPT {
     private ArrayList<HashMap<String, String>> rows;
+    private HashSet<String> varNames;
 
     public CPT(ArrayList<Double> table, ArrayList<VariableNode> variableNodes) {
+        this.varNames =  new HashSet<>();
         this.rows = new ArrayList<>();
         for (int i = 0; i < table.size(); i++) {
             rows.add(new HashMap<>());
         }
         initRows(variableNodes, table);
-        System.out.println(rows);
+        initVarNames(variableNodes);
     }
 
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
@@ -34,12 +37,19 @@ public class CPT {
         }
     }
 
-    public static void main(String[] args) {
-        Network net = new Network("input.txt");
-        System.out.println(net);
-
+    private void initVarNames(ArrayList<VariableNode> variableNodes) {
+        for (VariableNode v : variableNodes) {
+            varNames.add(v.getName());
+        }
     }
 
+    public ArrayList<HashMap<String, String>> getRows() {
+        return rows;
+    }
+
+    public HashSet<String> getVarNames() {
+        return varNames;
+    }
 }
 
     /*
