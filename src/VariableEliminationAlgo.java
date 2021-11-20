@@ -1,5 +1,6 @@
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,12 +14,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         this.data = data;
         this.input = input;
         parseInput();
-        init_cpt();
-        ArrayList<Double> res = join(data.get("M").getCpt(), data.get("J").getCpt(), "A");
-        System.out.println(res);
-        data.get("J").getCpt().setTable(res);
-        res = join(data.get("A").getCpt(), data.get("J").getCpt(), "A");
-        System.out.println(res);
+//        filterEvidence();
     }
 
     @Override
@@ -47,61 +43,108 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
     }
 
-    private void init_cpt() {
+    private void filterEvidence() {
         for (VariableNode v : data.values()) {
-            v.setCpt(new CPT(v));
-        }
-    }
-
-    private ArrayList<Double> join(CPT cpt1, CPT cpt2, String hidden) { // cpt1.table.size >= cpt2.table.size
-        // find step for the hidden variable in each cpt table
-        int count1, count2;
-        count1 = count2 = data.get(hidden).getOutcomes().size();
-        for (int i = 0; i < cpt1.getVar_names().indexOf(hidden); i++) {
-            count1 *= data.get(cpt1.getVar_names().get(i)).getOutcomes().size();
-        }
-        for (int i = 0; i < cpt2.getVar_names().indexOf(hidden); i++) {
-            count2 *= data.get(cpt2.getVar_names().get(i)).getOutcomes().size();
-        }
-        // multiply according to the alternations in the step size
-        int table1 = cpt1.getTable().size();
-        int table2 = cpt2.getTable().size();
-        int step1 = table1 / count1;
-        int step2 = table2 / count2;
-        int counter = 0;
-        ArrayList<Double> new_table = new ArrayList<>();
-        for (int i = 0; i < table1; i++) {
-            if (i > 0 && i % step1 == 0) {
-                counter += step2;
-                if (counter >= table2) {
-                    counter = 0;
+            if (v.isEvidence()) {
+                for (int i = 0; i < v.getCpt().getRows().size(); i++) {
+                    HashMap<String, String> currRow = v.getCpt().getRows().get(i);
+                    if (currRow.containsKey(v.getName()) && currRow.get(v.getName()).equals(v.getEvidence())) {
+                        currRow.remove(v.getName());
+                        v.getCpt().getVarNames().remove(v.getName());
+                    }
+                    System.out.println(currRow.keySet());
+//                    else {
+//                        for (String key : currRow.get(i)) {
+//                            currRow.remove(key);
+//                        }
+//                    }
+//                    System.out.println(newRow);
                 }
             }
-            new_table.add(cpt1.getTable().get(i) * cpt2.getTable().get(counter));
-
         }
-        return new_table;
     }
 
-//    private void update_tables(String var_name) { // var_name of evidence node
-//        VariableNode v = data.get(var_name);
-//        if (!v.isRootNode()) {
-//            int outcome_index = -1;
-//            for (int i = 0; i < v.getOutcomes().size(); i++) {
-//                if (v.getOutcomes().get(i).equals(v.getEvidence())) { // find index of evidence in outcomes list
-//                    outcome_index = i;
+    private void join(CPT cpt1, CPT cpt2, String hidden) {
+        Queue<HashMap<String, String>> factors = new LinkedList<>();
+        for (VariableNode v : data.values()) {
+            if (v.getCpt().getVarNames().contains(hidden)) {
+
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Network net = new Network("input.txt");
+        String s = "P(B=T|J=T,M=T) A-E";
+        VariableEliminationAlgo ve = new VariableEliminationAlgo(net.getNet(), s);
+        for (VariableNode v : net.getNet().values()) {
+            System.out.println(v.getCpt().getVarNames() + " " + v.getCpt().getRows());
+        }
+    }
+
+
+}
+
+//    private ArrayList<Double> join(CPT cpt1, CPT cpt2, String hidden) { // cpt1.table.size <= cpt2.table.size
+//        // find step for the hidden variable in each cpt table
+//        int count1 = calcStepSize(cpt1, hidden), count2 = calcStepSize(cpt2, hidden);
+////        count1 = count2 = data.get(hidden).getOutcomes().size();
+////        for (int i = 0; i < cpt1.getVar_names().indexOf(hidden); i++) {
+////            count1 *= data.get(cpt1.getVar_names().get(i)).getOutcomes().size();
+////        }
+////        for (int i = 0; i < cpt2.getVar_names().indexOf(hidden); i++) {
+////            count2 *= data.get(cpt2.getVar_names().get(i)).getOutcomes().size();
+////        }
+//        // multiply according to the alternations in the step size
+//        int table1 = cpt1.getTable().size();
+//        int table2 = cpt2.getTable().size();
+//        int step1 = table1 / count1;
+//        int step2 = table2 / count2;
+//        int counter = 0;
+//        ArrayList<Double> new_table = new ArrayList<>();
+//        for (int i = 0; i < table2; i++) {
+//            if (i > 0 && i % step2 == 0) {
+//                counter += step1;
+//                if (counter >= table1) {
+//                    counter = 0;
+//                }
+//            }
+//            double res = cpt2.getTable().get(i) * cpt1.getTable().get(counter);
+//            BigDecimal bd = new BigDecimal(res);
+//            bd = bd.setScale(5, RoundingMode.HALF_UP);
+//            new_table.add(bd.doubleValue());
+//        }
+//        return new_table;
+//    }
+//
+//    private ArrayList<Double> eliminate(CPT cpt, String hidden, boolean nextIsQ) {
+////        int index_hidden = cpt.getVar_names().indexOf(hidden);
+//        int step;
+//        if (nextIsQ) {
+//            step = cpt.getTable().size() / calcStepSize(cpt, "E");
+//        } else {
+//            int index = 0;
+//            for (int i = 0; i < cpt.getVar_names().size() - 1; i++) {
+//                if (cpt.getVar_names().get(i + 1).equals(hidden)) {
+//                    index = i;
 //                    break;
 //                }
 //            }
-//            if (outcome_index > -1) {
-//                ArrayList<Integer> res = get_table_indices(v, outcome_index);
-//                ArrayList<Double> new_table = new ArrayList<>();
-//                for (Integer re : res) {
-//                    new_table.add(v.getTable().get(re));
-//                }
-//                v.setTable(new_table);
+//            step = cpt.getTable().size() / calcStepSize(cpt, cpt.getVar_names().get(index));
+//        }
+//
+//        ArrayList<Double> res = new ArrayList<>();
+//        double sum = 0;
+//        for (int i = 0; i < cpt.getTable().size(); i++) {
+//            sum += cpt.getTable().get(i);
+//            if (i > 0 && (i + 1) % step == 0) {
+//                BigDecimal bd = new BigDecimal(sum);
+//                bd = bd.setScale(5, RoundingMode.HALF_UP);
+//                res.add(bd.doubleValue());
+//                sum = 0;
 //            }
 //        }
+//        return res;
 //    }
 
 
@@ -118,52 +161,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
 
 
-     */
-
-//    public ArrayList<Integer> get_table_indices(VariableNode v, int outcome_index) { // v is the current node, outcome_index is the outcome needed
-//        ArrayList<Integer> res = new ArrayList<>();
-//        int div = 1;
-//        for (int i = 0; i < v.getParents().size(); i++) {
-//            VariableNode parent = v.getParents().get(i);
-//            div *= parent.getOutcomes().size();
-//            for (int j = 0; j < parent.getChildren().size(); j++) {
-//                if (parent.getChildren().get(j).getName().equals(v.getName())) {
-//                    break;
-//                }
-//                div *= parent.getOutcomes().size();
-//            }
-//
-//            // need to get indices of current list too!
-//            int step = v.getTable().size() / div;
-//            int index = outcome_index * step; // start index of outcome in table
-//            while (index < v.getTable().size()) {
-//                res.add(index);
-//                index++;
-//                if (index % step == 0) {
-//                    index += (step * (v.getOutcomes().size() - 1));
-//                }
-//            }
-//        }
-//        return res;
-//    }
-
-    public static void main(String[] args) {
-        Network net = new Network("input.txt");
-        String s = "P(B=T|J=T,M=T) A-E";
-        VariableEliminationAlgo ve = new VariableEliminationAlgo(net.getNet(), s);
-
-
-    }
-
-
-//    private void is_independent() {
-//        VariableNode q = data.get(query[0]);
-//        for (int i = 0; i < hidden.length; i += 2) {
-//            VariableNode h = data.get(hidden[i]);
-//            String result = new BayesBallAlgo(data, new String[]{q.getName(), h.getName()}).search();
-//
-//        }
-//    }
 
     /*
 
@@ -206,4 +203,3 @@ insert table to list and continue
 
  */
 
-}
