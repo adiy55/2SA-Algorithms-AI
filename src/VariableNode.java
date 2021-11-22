@@ -30,7 +30,7 @@ public class VariableNode {
     }
 
     public boolean isEliminated() {
-        return isEliminated;
+        return !isEliminated;
     }
 
     public CPT getCpt() {
