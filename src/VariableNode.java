@@ -14,13 +14,13 @@ public class VariableNode {
 
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
-        this.outcomes = outcomes;
-        evidence = null;
-        this.parents = new ArrayList<>();
-        this.children = new ArrayList<>();
-        this.table = null;
-        isFromChild = isFromParent = false;
-        this.cpt = null;
+        this.outcomes = outcomes; // T,F / v1,v2,v2 (according to xml)
+        evidence = null; // String that contains the given outcome, if unknown remains null
+        this.parents = new ArrayList<>(); // list of parent nodes (for node, given == parent nodes)
+        this.children = new ArrayList<>(); // list of children nodes (given == parent node of current child node)
+        this.table = null; // probabilities
+        isFromChild = isFromParent = false; // for BayesBall algorithm
+        this.cpt = null; // constructor will be called when parsing definition / when initCPT method is called
     }
 
     public CPT getCpt() {
@@ -95,14 +95,14 @@ public class VariableNode {
         return outcomes;
     }
 
-    public int getEvidenceIndex() {
-        return outcomes.indexOf(evidence);
-    }
+//    public int getEvidenceIndex() {
+//        return outcomes.indexOf(evidence);
+//    }
 
     public void initCPT() {
-        ArrayList<VariableNode> variableNodes = new ArrayList<>(parents);
-        variableNodes.add(this);
-        cpt = new CPT(table, variableNodes);
+        ArrayList<VariableNode> variableNodes = new ArrayList<>(parents); // add all parents to new arraylist
+        variableNodes.add(this); // add current node to end of arraylist
+        cpt = new CPT(table, variableNodes); // call cpt constructor
     }
 
     public String toString() {
