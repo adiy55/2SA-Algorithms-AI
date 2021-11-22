@@ -5,31 +5,33 @@ import java.util.HashSet;
 public class CPT {
     private ArrayList<HashMap<String, String>> rows;
     private HashSet<String> varNames;
+    private int asciiVal;
 
     public CPT(ArrayList<Double> table, ArrayList<VariableNode> variableNodes) {
-        this.varNames =  new HashSet<>();
+        this.varNames = new HashSet<>();
+        this.asciiVal = 0;
         this.rows = new ArrayList<>();
         for (int i = 0; i < table.size(); i++) {
             rows.add(new HashMap<>());
         }
         initRows(variableNodes, table);
-        initVarNames(variableNodes);
+        initVars(variableNodes);
     }
 
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
         int div = 1, step;
-        for (VariableNode variableNode : variableNodes) {
-            int n_outcome = 0;
-            div *= variableNode.getOutcomes().size();
+        for (VariableNode v : variableNodes) {
+            int outcome_index = 0;
+            div *= v.getOutcomes().size();
             step = table.size() / div;
             for (int j = 0; j < table.size(); j++) {
                 if (j > 0 && j % step == 0) {
-                    n_outcome++;
+                    outcome_index++;
                 }
-                if (n_outcome >= variableNode.getOutcomes().size()) {
-                    n_outcome = 0;
+                if (outcome_index >= v.getOutcomes().size()) {
+                    outcome_index = 0;
                 }
-                rows.get(j).put(variableNode.getName(), variableNode.getOutcomes().get(n_outcome));
+                rows.get(j).put(v.getName(), v.getOutcomes().get(outcome_index));
             }
         }
         for (int i = 0; i < table.size(); i++) {
@@ -37,10 +39,28 @@ public class CPT {
         }
     }
 
-    private void initVarNames(ArrayList<VariableNode> variableNodes) {
+    private void initVars(ArrayList<VariableNode> variableNodes) {
         for (VariableNode v : variableNodes) {
             varNames.add(v.getName());
+            asciiVal += nameAsAscii(v.getName());
         }
+    }
+
+    public int nameAsAscii(String var_name) { // return sum of ascii values of variable name
+        char[] name = var_name.toCharArray();
+        int ascii_value = 0;
+        for (char c : name) {
+            ascii_value += c;
+        }
+        return ascii_value;
+    }
+
+    public void setAsciiVal(int asciiVal) {
+        this.asciiVal = asciiVal;
+    }
+
+    public int getAsciiVal() {
+        return asciiVal;
     }
 
     public ArrayList<HashMap<String, String>> getRows() {
