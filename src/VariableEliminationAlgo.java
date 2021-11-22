@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -9,12 +10,14 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     private String input;
     private String[] query;
     private String[] hidden;
+    private ArrayList<CPT> factors;
 
     public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data;
         this.input = input;
+        this.factors = new ArrayList<>();
         parseInput();
-//        filterEvidence();
+        filterEvidence();
     }
 
     @Override
@@ -46,23 +49,43 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     private void filterEvidence() {
         for (VariableNode v : data.values()) {
             if (v.isEvidence()) {
-                for (int i = 0; i < v.getCpt().getRows().size(); i++) {
+                int new_ascii_val = v.getCpt().getAsciiVal() - v.getCpt().nameAsAscii(v.getName());
+                v.getCpt().setAsciiVal(new_ascii_val);
+                v.getCpt().getVarNames().remove(v.getName());
+                for (int i = v.getCpt().getRows().size() - 1; i >= 0; i--) {
                     HashMap<String, String> currRow = v.getCpt().getRows().get(i);
-                    if (currRow.containsKey(v.getName()) && currRow.get(v.getName()).equals(v.getEvidence())) {
+                    if (currRow.get(v.getName()).equals(v.getEvidence())) {
                         currRow.remove(v.getName());
-                        v.getCpt().getVarNames().remove(v.getName());
+                    } else {
+                        v.getCpt().getRows().remove(i); // delete irrelevant hashmap
                     }
-                    System.out.println(currRow.keySet());
-//                    else {
-//                        for (String key : currRow.get(i)) {
-//                            currRow.remove(key);
-//                        }
-//                    }
-//                    System.out.println(newRow);
+                    if (currRow.size() == 1) {
+                        currRow.clear();
+                    }
                 }
             }
         }
     }
+
+    private void getFactors(String hidden) {
+        CPT cpt = data.get(hidden).getCpt();
+        factors.add(cpt);
+        for (int i = 0; i < data.get(hidden).getChildren().size(); i++) {
+            factors.add(data.get(hidden).getChildren().get(i).getCpt());
+        }
+    }
+
+//    private int sortFactors(CPT cpt) { // sort by size, then by ascii
+//        for (int i = 0; i < factors.size(); i++) {
+//            if (factors.get(i).getRows().size() < cpt.getRows().size()) {
+//                return i;
+//            } else if (factors.get(i).getRows().size() == cpt.getRows().size()) {
+//
+//            }
+//        }
+//    }
+//
+//}
 
     private void join(CPT cpt1, CPT cpt2, String hidden) {
         Queue<HashMap<String, String>> factors = new LinkedList<>();
