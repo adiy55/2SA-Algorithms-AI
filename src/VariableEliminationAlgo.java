@@ -1,7 +1,8 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,34 +68,72 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
     }
 
-    private void getFactors(String hidden) {
-        CPT cpt = data.get(hidden).getCpt();
-        factors.add(cpt);
-        for (int i = 0; i < data.get(hidden).getChildren().size(); i++) {
-            factors.add(data.get(hidden).getChildren().get(i).getCpt());
+    private ArrayList<CPT> getFactors(String hidden) {
+        ArrayList<CPT> curr_factors = new ArrayList<>();
+        VariableNode v = data.get(hidden);
+        if (v.isEliminated()) { // add current hidden node cpt
+            curr_factors.add(v.getCpt());
+            v.setEliminated(true);
         }
-    }
-
-//    private int sortFactors(CPT cpt) { // sort by size, then by ascii
-//        for (int i = 0; i < factors.size(); i++) {
-//            if (factors.get(i).getRows().size() < cpt.getRows().size()) {
-//                return i;
-//            } else if (factors.get(i).getRows().size() == cpt.getRows().size()) {
-//
-//            }
-//        }
-//    }
-//
-//}
-
-    private void join(CPT cpt1, CPT cpt2, String hidden) {
-        Queue<HashMap<String, String>> factors = new LinkedList<>();
-        for (VariableNode v : data.values()) {
-            if (v.getCpt().getVarNames().contains(hidden)) {
-
+        for (int i = 0; i < v.getChildren().size(); i++) { // add current nodes children cpts
+            if (v.getChildren().get(i).isEliminated()) {
+                curr_factors.add(v.getChildren().get(i).getCpt());
+                v.getChildren().get(i).setEliminated(true);
             }
         }
+        for (int i = 0; i < factors.size(); i++) { // add cpt results if contain current target node
+            if (factors.get(i).getVarNames().contains(hidden)) {
+                curr_factors.add(factors.remove(i));
+            }
+        }
+        curr_factors.sort(this::compare);
+        return curr_factors;
     }
+
+    public int compare(CPT cpt1, CPT cpt2) {
+        int diff = cpt1.getRows().size() - cpt2.getRows().size();
+        if (diff == 0) {
+            return Integer.compare(cpt1.getAsciiVal(), cpt2.getAsciiVal());
+        } else {
+            return Integer.compare(cpt1.getRows().size(), cpt2.getRows().size());
+        }
+    }
+
+    public CPT join(CPT cpt1, CPT cpt2) { // cpt1 < cpt2
+        HashSet<String> dups = getDuplicates(cpt1.getVarNames(), cpt2.getVarNames());
+        CPT result_factor = new CPT();
+        result_factor.setVarNames(dups);
+        for (int i = 0; i < cpt1.getRows().size(); i++) {
+            for (int j = 0; j < cpt2.getRows().size(); j++) {
+                HashMap<String, String> row1 = cpt1.getRows().get(i);
+                HashMap<String, String> row2 = cpt2.getRows().get(j);
+                HashMap<String, String> new_row = new HashMap<>();
+                for (String variable : dups) {
+                    if (row1.get(variable).equals(row2.get(variable))) {
+                        new_row.putAll(row1);
+                        new_row.putAll(row2);
+                        double mul = Double.parseDouble(row1.get("P")) * Double.parseDouble(row2.get("P"));
+                        BigDecimal bd = new BigDecimal(mul).setScale(5, RoundingMode.HALF_UP);
+                        new_row.put("P", bd.toString());
+                        result_factor.addRow(new_row);
+                    }
+                }
+            }
+        }
+        return result_factor;
+    }
+
+
+    private HashSet<String> getDuplicates(HashSet<String> hs1, HashSet<String> hs2) {
+        HashSet<String> dups = new HashSet<>();
+        for (String variable : hs1) {
+            if (hs2.contains(variable)) {
+                dups.add(variable);
+            }
+        }
+        return dups;
+    }
+
 
     public static void main(String[] args) {
         Network net = new Network("input.txt");
@@ -103,10 +142,25 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         for (VariableNode v : net.getNet().values()) {
             System.out.println(v.getCpt().getVarNames() + " " + v.getCpt().getRows());
         }
+        ArrayList<CPT> res = ve.getFactors("A");
+        for (CPT re : res) {
+            System.out.println(re.getRows());
+            System.out.println();
+        }
+        CPT c = ve.join(res.get(0), res.get(1));
+        for (int i = 0; i < c.getRows().size(); i++) {
+            System.out.println(c.getRows().get(i));
+        }
+
+
     }
 
 
 }
+
+// small / large
+// a b //
+
 
 //    private ArrayList<Double> join(CPT cpt1, CPT cpt2, String hidden) { // cpt1.table.size <= cpt2.table.size
 //        // find step for the hidden variable in each cpt table
