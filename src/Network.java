@@ -12,7 +12,7 @@ public class Network {
         net = parser.getData();
         queries = parser.getQueries();
         results = new ArrayList<>();
-//        runQueries();
+        runQueries();
     }
 
     public void runQueries() {
@@ -35,7 +35,7 @@ public class Network {
             v.setFromChild(false);
             v.setFromParent(false);
             v.setEvidence(null);
-            v.setCpt(null);
+            v.initCPT();
         }
     }
 
