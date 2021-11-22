@@ -18,6 +18,20 @@ public class CPT {
         initVars(variableNodes);
     }
 
+    public CPT() {
+        varNames = new HashSet<>();
+        asciiVal = 0;
+        rows = new ArrayList<>();
+    }
+
+    public void addRow(HashMap<String, String> new_row) {
+        rows.add(new_row);
+    }
+
+    public void setVarNames(HashSet<String> varNames) {
+        this.varNames = varNames;
+    }
+
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
         int div = 1, step;
         for (VariableNode v : variableNodes) {
@@ -43,6 +57,13 @@ public class CPT {
         for (VariableNode v : variableNodes) {
             varNames.add(v.getName());
             asciiVal += nameAsAscii(v.getName());
+        }
+    }
+
+    private void calcAsciiVal() {
+        asciiVal = 0;
+        for (int i = 0; i < varNames.size(); i++) {
+            varNames.stream().iterator().forEachRemaining(s -> asciiVal += nameAsAscii(s));
         }
     }
 
