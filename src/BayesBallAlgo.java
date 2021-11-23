@@ -12,6 +12,11 @@ public class BayesBallAlgo implements NetworkAlgo {
         parseInput();
     }
 
+    public BayesBallAlgo(HashMap<String, VariableNode> data, String[] query_nodes){
+        this.data = data;
+        this.query_nodes = query_nodes;
+    }
+
     private void parseInput() {
         String[] s = input.split("\\|");
         String[] query_node_names = s[0].split("-");
