@@ -35,6 +35,7 @@ public class Network {
             v.setFromChild(false);
             v.setFromParent(false);
             v.setEvidence(null);
+            v.setEliminated(false);
             v.initCPT();
         }
     }
