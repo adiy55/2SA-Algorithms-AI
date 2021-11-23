@@ -30,6 +30,7 @@ public class CPT {
 
     public void setVarNames(HashSet<String> varNames) {
         this.varNames = varNames;
+        calcAsciiVal();
     }
 
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
@@ -60,11 +61,9 @@ public class CPT {
         }
     }
 
-    private void calcAsciiVal() {
+    public void calcAsciiVal() {
         asciiVal = 0;
-        for (int i = 0; i < varNames.size(); i++) {
-            varNames.stream().iterator().forEachRemaining(s -> asciiVal += nameAsAscii(s));
-        }
+        varNames.stream().iterator().forEachRemaining(s -> asciiVal += nameAsAscii(s));
     }
 
     public int nameAsAscii(String var_name) { // return sum of ascii values of variable name
