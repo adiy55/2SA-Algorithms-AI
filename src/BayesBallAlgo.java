@@ -12,7 +12,7 @@ public class BayesBallAlgo implements NetworkAlgo {
         parseInput();
     }
 
-    public BayesBallAlgo(HashMap<String, VariableNode> data, String[] query_nodes){
+    public BayesBallAlgo(HashMap<String, VariableNode> data, String[] query_nodes) {
         this.data = data;
         this.query_nodes = query_nodes;
     }
@@ -32,7 +32,12 @@ public class BayesBallAlgo implements NetworkAlgo {
 
     @Override
     public String RunAlgo() {
-        return search();
+        String res = search();
+        for (VariableNode v : data.values()) {
+            v.setFromChild(false);
+            v.setFromParent(false);
+        }
+        return res;
     }
 
     private String search() { // DFS
