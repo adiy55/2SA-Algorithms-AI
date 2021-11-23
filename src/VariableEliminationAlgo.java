@@ -10,23 +10,26 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     private String[] query;
     private ArrayList<String> hidden;
     private ArrayList<CPT> factors;
+    private int nMul;
+    private int nAdd;
 
     public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data;
         this.input = input;
         this.factors = new ArrayList<>();
         this.hidden = new ArrayList<>();
+        nMul = nAdd = 0;
         parseInput();
         filterEvidence();
     }
 
     @Override
     public String RunAlgo() {
-        for (int i = hidden.size()-1; i >=0 ; i--) { // todo: run bayes ball on hidden variables (yes -> ignore variable)
+        for (int i = hidden.size() - 1; i >= 0; i--) {
             String[] input = new String[]{query[0], hidden.get(i)};
             BayesBallAlgo bba = new BayesBallAlgo(data, input);
             String res = bba.RunAlgo();
-            if(res.equals("yes")){
+            if (res.equals("yes")) {
                 data.get(hidden.get(i)).setCPTUsed(true);
                 hidden.remove(i);
             }
@@ -39,7 +42,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         join_eliminate_normalize(query_factors, query[0], true);
         for (int i = 0; i < factors.get(0).getRows().size(); i++) {
             if (factors.get(0).getRows().get(i).get(query[0]).equals(query[1])) {
-                return factors.get(0).getRows().get(i).get("P");
+                String res = factors.get(0).getRows().get(i).get("P") + "," + nAdd + "," + nMul;
+                return res;
             }
         }
         return "not found";
@@ -47,7 +51,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
     private void parseInput() {
         String[] s = input.split(" ");
-        hidden = new ArrayList<>(Arrays.stream(s[1].split("-")).toList()); // todo: convert to arraylist????
+        hidden = new ArrayList<>(Arrays.stream(s[1].split("-")).toList());
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s[0]);
         String inside_parenthesis = "";
@@ -149,6 +153,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                         BigDecimal bd1 = new BigDecimal(row1.get("P"));
                         BigDecimal bd2 = new BigDecimal(row2.get("P"));
                         new_row.put("P", bd1.multiply(bd2).toString());
+                        nMul++;
                         result_factor.addRow(new_row);
                     }
                 }
@@ -171,9 +176,10 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     private CPT normalize(CPT query_factor) {
-        double rows_sum = 0;
-        for (int i = 0; i < query_factor.getRows().size(); i++) {
+        double rows_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
+        for (int i = 1; i < query_factor.getRows().size(); i++) {
             rows_sum += Double.parseDouble(query_factor.getRows().get(i).get("P"));
+            nAdd++;
         }
         for (int i = 0; i < query_factor.getRows().size(); i++) {
             double normalized = Double.parseDouble(query_factor.getRows().get(i).get("P")) / rows_sum;
@@ -193,7 +199,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         return dups;
     }
 
-
     private CPT eliminate(CPT curr_factor, String hidden) {
         Map<String, Double> mapped_probabilities = new HashMap<>();
         CPT new_factor = new CPT();
@@ -206,6 +211,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             String curr_key = curr_row.toString();
             if (mapped_probabilities.containsKey(curr_key)) {
                 mapped_probabilities.put(curr_key, mapped_probabilities.get(curr_key) + probability);
+                nAdd++;
             } else {
                 mapped_probabilities.put(curr_key, probability);
                 new_factor.addRow(curr_row);
@@ -219,7 +225,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
     // hidden outcomes == number of rows to add
     // find rows with the same value according to the variables
-    //
 
     public static void main(String[] args) {
         Network net = new Network("input.txt");
@@ -245,6 +250,4 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 //- multiply according to variable outcome
 
 
-// todo: count number of additions and multiplications,
-//  bayes ball / remove unnecessary hidden variables from order of elimination
-//  test functions (input parsers), output to text file, documentation
+// todo: test functions (input parsers), output to text file, documentation
