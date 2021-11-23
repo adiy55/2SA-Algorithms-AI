@@ -11,7 +11,7 @@ public class VariableNode {
     private boolean isFromChild;
     private boolean isFromParent;
     private CPT cpt;
-    private boolean isEliminated;
+    private boolean isCPTUsed;
 
     public VariableNode(String name, ArrayList<String> outcomes) {
         this.name = name;
@@ -22,27 +22,19 @@ public class VariableNode {
         this.table = null; // probabilities
         isFromChild = isFromParent = false; // for BayesBall algorithm
         this.cpt = null; // constructor will be called when parsing definition / when initCPT method is called
-        this.isEliminated = false; // to mark if cpt has been used for variable elimination
+        this.isCPTUsed = false; // to mark if cpt has been used for variable elimination
     }
 
-    public void setEliminated(boolean eliminated) {
-        isEliminated = eliminated;
+    public void setCPTUsed(boolean CPTUsed) {
+        isCPTUsed = CPTUsed;
     }
 
-    public boolean isEliminated() {
-        return !isEliminated;
+    public boolean isCPTUsed() {
+        return isCPTUsed;
     }
 
-    public CPT getCpt() {
+    public CPT getCPT() {
         return cpt;
-    }
-
-    public void setCpt(CPT cpt) {
-        this.cpt = cpt;
-    }
-
-    public boolean isRootNode() {
-        return (parents.isEmpty());
     }
 
     public String getEvidence() {
@@ -104,10 +96,6 @@ public class VariableNode {
     public ArrayList<String> getOutcomes() {
         return outcomes;
     }
-
-//    public int getEvidenceIndex() {
-//        return outcomes.indexOf(evidence);
-//    }
 
     public void initCPT() {
         ArrayList<VariableNode> variableNodes = new ArrayList<>(parents); // add all parents to new arraylist
