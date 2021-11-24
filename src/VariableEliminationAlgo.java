@@ -6,50 +6,33 @@ import java.util.regex.Pattern;
 
 public class VariableEliminationAlgo implements NetworkAlgo {
     private HashMap<String, VariableNode> data;
-    private String input;
     private String[] query;
     private ArrayList<String> hidden;
     private ArrayList<CPT> factors;
     private int nMul;
     private int nAdd;
+    private HashSet<String> ancestorNodes;
 
+    /**
+     * Variable Elimination Algorithm constructor.
+     *
+     * @param data  Network
+     * @param input Query (parsed from the text file)
+     */
     public VariableEliminationAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data;
-        this.input = input;
         this.factors = new ArrayList<>();
         this.hidden = new ArrayList<>();
         nMul = nAdd = 0;
-        parseInput();
+        ancestorNodes = new HashSet<>();
+        parseInput(input);
         filterEvidence();
     }
 
-    @Override
-    public String RunAlgo() {
-        for (int i = hidden.size() - 1; i >= 0; i--) {
-            String[] input = new String[]{query[0], hidden.get(i)};
-            BayesBallAlgo bba = new BayesBallAlgo(data, input);
-            String res = bba.RunAlgo();
-            if (res.equals("yes")) {
-                data.get(hidden.get(i)).setCPTUsed(true);
-                hidden.remove(i);
-            }
-        }
-        for (String s : hidden) {
-            ArrayList<CPT> curr_factors = getFactors(s);
-            join_eliminate_normalize(curr_factors, s, false);
-        }
-        ArrayList<CPT> query_factors = getFactors(query[0]);
-        join_eliminate_normalize(query_factors, query[0], true);
-        for (int i = 0; i < factors.get(0).getRows().size(); i++) {
-            if (factors.get(0).getRows().get(i).get(query[0]).equals(query[1])) {
-                String res = factors.get(0).getRows().get(i).get("P") + "," + nAdd + "," + nMul;
-                return res;
-            }
-        }
-        return "not found";
-    }
-
-    private void parseInput() {
+    /**
+     * Extracts the current query variables from the string given input.
+     */
+    private void parseInput(String input) {
         String[] s = input.split(" ");
         hidden = new ArrayList<>(Arrays.stream(s[1].split("-")).toList());
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
@@ -69,20 +52,33 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
     }
 
+    /**
+     * Keeps the rows that match the outcome of the evidence nodes from the node itself, and it's children.
+     */
     private void filterEvidence() {
         for (VariableNode v : data.values()) {
             if (v.isEvidence()) {
-                rowFilter(v, v.getName(), v.getEvidence());
+                rowFilter(v, v.getName(), v.getEvidence()); // call helper function
                 for (VariableNode child : v.getChildren()) {
-                    rowFilter(child, v.getName(), v.getEvidence());
+                    rowFilter(child, v.getName(), v.getEvidence()); // call helper function
                 }
             }
         }
     }
 
+    /**
+     * Deletes rows that don't match the outcome and removes the evidence variable from rows that match the outcome.
+     *
+     * @param v            VariableNode
+     * @param evidence_var Name of evidence variable
+     * @param var_outcome  Outcome of evidence variable
+     */
     private void rowFilter(VariableNode v, String evidence_var, String var_outcome) {
-        v.getCPT().getVarNames().remove(evidence_var);
-        v.getCPT().calcAsciiVal();
+        HashSet<String> new_vars = new HashSet<>(v.getCPT().getVarNames());
+        new_vars.remove(evidence_var);
+        v.getCPT().setVarNames(new_vars);
+
+//        v.getCPT().setAsciiVal(v.getCPT().getAsciiVal() - v.getCPT().nameAsAscii(evidence_var));
         for (int i = v.getCPT().getRows().size() - 1; i >= 0; i--) {
             HashMap<String, String> currRow = v.getCPT().getRows().get(i);
             if (currRow.get(evidence_var).equals(var_outcome)) {
@@ -90,10 +86,56 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             } else {
                 v.getCPT().getRows().remove(i); // delete irrelevant hashmap
             }
-            if (currRow.size() == 1) {
-                currRow.clear();
+//            if (currRow.size() == 1) {
+//                currRow.clear(); // remove if cpt is one valued
+//            }
+        }
+        if (v.getCPT().getRows().size() == 1) {
+            v.getCPT().setRows(new ArrayList<>());
+        }
+    }
+
+//    private void initAncestorNodes() {
+//        for (int i = 0; i < data.get(query[0]).getParents().size(); i++) {
+//            ancestorNodes.add(data.get(query[0]).getParents().get(i).getName());
+//        }
+//        for (String name :
+//                ) {
+//
+//        }
+//    }
+
+    @Override
+    public String RunAlgo() {
+        String res = "";
+
+//        for (int i = hidden.size() - 1; i >= 0; i--) {
+//            String[] input = new String[]{query[0], hidden.get(i)};
+//            BayesBallAlgo bba = new BayesBallAlgo(data, input);
+//            String bba_res = bba.RunAlgo();
+//            if (bba_res.equals("yes")) {
+//                data.get(hidden.get(i)).setCPTUsed(true);
+//                hidden.remove(i);
+//            }
+//        }
+        for (String s : hidden) {
+            ArrayList<CPT> curr_factors = getFactors(s);
+            CPT cpt_eliminated = eliminate(join(curr_factors), s);
+            factors.add(cpt_eliminated);
+        }
+        ArrayList<CPT> query_factors = getFactors(query[0]);
+        CPT result = normalize(join(query_factors));
+        for (int i = 0; i < result.getRows().size(); i++) {
+            if (result.getRows().get(i).get(query[0]).equals(query[1])) {
+                res = result.getRows().get(i).get("P") + "," + nAdd + "," + nMul;
+                break;
             }
         }
+        for (VariableNode v : data.values()) { // reset nodes for next query
+            v.setCPTUsed(false);
+            v.initCPT();
+        }
+        return res;
     }
 
     private ArrayList<CPT> getFactors(String hidden) {
@@ -109,19 +151,19 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 v.getChildren().get(i).setCPTUsed(true);
             }
         }
-        for (int i = 0; i < factors.size(); i++) { // add cpt results if contain current target node
+        for (int i = factors.size()-1; i >=0; i--) { // add cpt results if contain current target node
             if (factors.get(i).getVarNames().contains(hidden)) {
                 curr_factors.add(factors.remove(i));
             }
         }
         curr_factors.sort(this::compare);
-//        System.out.println("Hidden: " + hidden);
-//        for (CPT cpt : curr_factors) {
-//            for (int i = 0; i < cpt.getRows().size(); i++) {
-//                System.out.println(cpt.getRows().get(i));
-//            }
-//        }
-//        System.out.println("-----");
+        System.out.println("Hidden: " + hidden);
+        for (CPT cpt : curr_factors) {
+            for (int i = 0; i < cpt.getRows().size(); i++) {
+                System.out.println(cpt.getVarNames() + " " + cpt.getRows().get(i));
+            }
+        }
+        System.out.println("-----");
         return curr_factors;
     }
 
@@ -135,7 +177,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     private CPT join(CPT cpt1, CPT cpt2) { // cpt1 > cpt2
-        HashSet<String> dups = getDuplicates(cpt1.getVarNames(), cpt2.getVarNames());
+        HashSet<String> duplicates = getDuplicates(cpt1.getVarNames(), cpt2.getVarNames());
         CPT result_factor = new CPT();
         HashSet<String> new_var_names = new HashSet<>();
         new_var_names.addAll(cpt1.getVarNames());
@@ -143,78 +185,53 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         result_factor.setVarNames(new_var_names);
         for (int i = 0; i < cpt2.getRows().size(); i++) {
             for (int j = 0; j < cpt1.getRows().size(); j++) {
-                HashMap<String, String> row1 = cpt2.getRows().get(i);
-                HashMap<String, String> row2 = cpt1.getRows().get(j);
-                HashMap<String, String> new_row = new HashMap<>();
-                for (String variable : dups) {
-                    if (row1.get(variable).equals(row2.get(variable))) {
-                        new_row.putAll(row1);
-                        new_row.putAll(row2);
-                        BigDecimal bd1 = new BigDecimal(row1.get("P"));
-                        BigDecimal bd2 = new BigDecimal(row2.get("P"));
-                        new_row.put("P", bd1.multiply(bd2).toString());
-                        nMul++;
-                        result_factor.addRow(new_row);
-                    }
+                HashMap<String, String> row2 = cpt2.getRows().get(i);
+                HashMap<String, String> row1 = cpt1.getRows().get(j);
+                if (isRowMatch(duplicates, row1, row2)) {
+                    HashMap<String, String> new_row = new HashMap<>();
+                    double res = Double.parseDouble(row1.get("P")) * Double.parseDouble(row2.get("P"));
+//                    BigDecimal bd1 = new BigDecimal(row1.get("P"));
+//                    BigDecimal bd2 = new BigDecimal(row2.get("P"));
+                    new_row.putAll(row1);
+                    new_row.putAll(row2);
+                    new_row.put("P", res + "");
+                    nMul++;
+                    result_factor.addRow(new_row);
                 }
             }
         }
         return result_factor;
     }
 
-    private void join_eliminate_normalize(ArrayList<CPT> curr_factors, String hidden, boolean is_query) {
-        while (curr_factors.size() > 1) {
-            CPT res = join(curr_factors.remove(1), curr_factors.remove(0));
-            curr_factors.add(res);
-            curr_factors.sort(this::compare);
-        }
-        if (curr_factors.size() == 1 && !is_query) {
-            factors.add(eliminate(curr_factors.remove(0), hidden));
-        } else if (curr_factors.size() == 1) {
-            factors.add(0, normalize(curr_factors.remove(0)));
-        }
-    }
-
-    private CPT normalize(CPT query_factor) {
-        double rows_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
-        for (int i = 1; i < query_factor.getRows().size(); i++) {
-            rows_sum += Double.parseDouble(query_factor.getRows().get(i).get("P"));
-            nAdd++;
-        }
-        for (int i = 0; i < query_factor.getRows().size(); i++) {
-            double normalized = Double.parseDouble(query_factor.getRows().get(i).get("P")) / rows_sum;
-            BigDecimal bd = new BigDecimal(normalized).setScale(5, RoundingMode.HALF_UP);
-            query_factor.getRows().get(i).put("P", bd.toString());
-        }
-        return query_factor;
-    }
-
-    private HashSet<String> getDuplicates(HashSet<String> hs1, HashSet<String> hs2) {
-        HashSet<String> dups = new HashSet<>();
-        for (String variable : hs1) {
-            if (hs2.contains(variable)) {
-                dups.add(variable);
+    private boolean isRowMatch(HashSet<String> duplicates, HashMap<String, String> row1, HashMap<String, String> row2) {
+        for (String variable : duplicates) {
+            if (!row1.get(variable).equals(row2.get(variable))) {
+                return false;
             }
         }
-        return dups;
+        return true;
     }
 
     private CPT eliminate(CPT curr_factor, String hidden) {
+        System.out.println(curr_factor.getRows());
         Map<String, Double> mapped_probabilities = new HashMap<>();
         CPT new_factor = new CPT();
-        curr_factor.getVarNames().remove(hidden);
-        new_factor.setVarNames(curr_factor.getVarNames());
+        HashSet<String> new_vars = new HashSet<>(curr_factor.getVarNames());
+        new_vars.remove(hidden);
+        new_factor.setVarNames(new_vars);
         for (int i = 0; i < curr_factor.getRows().size(); i++) {
             HashMap<String, String> curr_row = curr_factor.getRows().get(i);
-            curr_row.remove(hidden);
-            double probability = Double.parseDouble(curr_row.remove("P"));
-            String curr_key = curr_row.toString();
+            HashMap<String, String> new_row = new HashMap<>(curr_row);
+            new_row.remove(hidden);
+            double probability = Double.parseDouble(new_row.remove("P"));
+            String curr_key = new_row.toString();
             if (mapped_probabilities.containsKey(curr_key)) {
-                mapped_probabilities.put(curr_key, mapped_probabilities.get(curr_key) + probability);
+                double curr = mapped_probabilities.remove(curr_key);
+                mapped_probabilities.put(curr_key, curr + probability);
                 nAdd++;
             } else {
                 mapped_probabilities.put(curr_key, probability);
-                new_factor.addRow(curr_row);
+                new_factor.addRow(new_row);
             }
         }
         for (HashMap<String, String> row : new_factor.getRows()) {
@@ -223,21 +240,139 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         return new_factor;
     }
 
+//    private CPT eliminate(CPT curr_factor, String hidden) {
+//        Map<String, Double> mapped_probabilities = new HashMap<>();
+//        CPT new_factor = new CPT();
+//        curr_factor.getVarNames().remove(hidden);
+//        new_factor.setVarNames(curr_factor.getVarNames());
+//        for (int i = 0; i < curr_factor.getRows().size(); i++) {
+//            HashMap<String, String> curr_row = curr_factor.getRows().get(i);
+//            curr_row.remove(hidden);
+//            double probability = Double.parseDouble(curr_row.remove("P"));
+//            String curr_key = curr_row.toString();
+//            if (mapped_probabilities.containsKey(curr_key)) {
+//                probability += mapped_probabilities.get(curr_key);
+//                mapped_probabilities.put(curr_key, probability);
+//                nAdd++;
+//            } else {
+//                mapped_probabilities.put(curr_key, probability);
+//                new_factor.addRow(curr_row);
+//            }
+//        }
+//        for (HashMap<String, String> row : new_factor.getRows()) {
+//            row.put("P", mapped_probabilities.get(row.toString()).toString());
+//        }
+//        if (new_factor.getRows().size() <= 1) {
+//            new_factor.setRows(new ArrayList<>());
+//            return new_factor;
+//        } else {
+//            new_factor.setRows(createMergedRow(curr_factor.getRows(), mapped_probabilities));
+//            return new_factor;
+//        }
+//    }
+
+//    private CPT eliminate(CPT curr_factor, String hidden) {
+//        ArrayList<HashMap<String, String>> new_rows = new ArrayList<>();
+//        CPT new_cpt = new CPT();
+//        HashSet<String> new_vars = new HashSet<>();
+//        new_vars.addAll(curr_factor.getVarNames());
+//        new_vars.remove(hidden);
+//        new_cpt.setVarNames(new_vars);
+//        HashMap<String, Double> mapped_probabilities = new HashMap<>();
+//        for (int i = 0; i < curr_factor.getRows().size(); i++) { // calculate probabilities
+//            HashMap<String, String> curr_row = curr_factor.getRows().get(i);
+//            HashMap<String, String> new_row = new HashMap<>(curr_row);
+//            new_row.remove(hidden);
+////            BigDecimal probability = new BigDecimal(new_row.get("P"));
+//            String curr_key = new_row.toString();
+//            if (mapped_probabilities.containsKey(curr_key)) {
+//                double res = mapped_probabilities.get(curr_key);
+//                res += Double.parseDouble(new_row.get("P"));
+//                mapped_probabilities.put(curr_key, res);
+//                nAdd++;
+//            } else {
+////                BigDecimal curr = new BigDecimal(new_row.get("P"));
+//                mapped_probabilities.put(curr_key, Double.parseDouble(new_row.get("P")));
+//                new_rows.add(new_row);
+//            }
+//        }
+//        for (HashMap<String, String> row : new_rows) { // add probabilities to new rows
+//            row.put("P", mapped_probabilities.get(row.toString()).toString());
+//        }
+//        if (new_rows.size() == 1) {
+//            new_cpt.setRows(new ArrayList<>());
+//        } else {
+//            new_cpt.setRows(new_rows);
+//        }
+//        return new_cpt;
+//    }
+
+    private CPT normalize(CPT query_factor) {
+        double rows_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
+        for (int i = 1; i < query_factor.getRows().size(); i++) { // calc probabilities sum
+            rows_sum += Double.parseDouble(query_factor.getRows().get(i).get("P"));
+            nAdd++;
+        }
+        for (int i = 0; i < query_factor.getRows().size(); i++) { // normalize probabilities
+            double normalized = Double.parseDouble(query_factor.getRows().get(i).get("P")) / rows_sum;
+            BigDecimal res = new BigDecimal(normalized).setScale(5, RoundingMode.HALF_UP);
+            query_factor.getRows().get(i).put("P", res.toString());
+        }
+        return query_factor;
+    }
+//
+//    private void joinEliminateNormalize(ArrayList<CPT> curr_factors, String hidden) {
+//        while (curr_factors.size() > 1) {
+//            CPT res = join(curr_factors.remove(1), curr_factors.remove(0));
+//            curr_factors.add(res);
+//            curr_factors.sort(this::compare);
+//        }
+//        if (curr_factors.size() == 1) {
+//            if (!query[0].equals(hidden)) {
+//                factors.add(eliminate(curr_factors.get(0), hidden));
+//            } else {
+//                factors.add(0, normalize(curr_factors.get(0)));
+//            }
+//        }
+//    }
+
+    private CPT join(ArrayList<CPT> curr_factors) {
+        while (curr_factors.size() > 1) {
+            CPT res = join(curr_factors.remove(1), curr_factors.remove(0));
+            curr_factors.add(res);
+            curr_factors.sort(this::compare);
+        }
+        return curr_factors.get(0);
+    }
+
+
+    private HashSet<String> getDuplicates(HashSet<String> hs1, HashSet<String> hs2) {
+        HashSet<String> duplicates = new HashSet<>();
+        for (String variable : hs1) {
+            if (hs2.contains(variable)) {
+                duplicates.add(variable);
+            }
+        }
+        return duplicates;
+    }
+
     // hidden outcomes == number of rows to add
     // find rows with the same value according to the variables
 
     public static void main(String[] args) {
-        Network net = new Network("input.txt");
-        String s = "P(B=T|J=T,M=T) A-E";
-        VariableEliminationAlgo ve = new VariableEliminationAlgo(net.getNet(), s);
-//        for (VariableNode v : net.getNet().values()) {
-//            System.out.println(v.getCPT().getVarNames() + " " + v.getCPT().getRows());
-//        }
+        FileParser fileParser = new FileParser("./input.txt");
+        HashMap<String, VariableNode> net = fileParser.getData();
+        String s1 = "P(B=T|J=T,M=T) A-E";
+        String s2 = "P(J=T|B=T) A-E-M";
+        String s3 = "P(J=T|B=T) M-E-A";
+        VariableEliminationAlgo ve = new VariableEliminationAlgo(net, s3);
+//        ArrayList<CPT> curr = ve.getFactors("A");
+//        CPT c = ve.join(curr.get(1), curr.get(0));
+//        System.out.println(c.getRows());
+        String res = ve.RunAlgo();
+        System.out.println(res);
+//        ve = new VariableEliminationAlgo(net, s2);
 //        System.out.println(ve.RunAlgo());
-        s = "P(J=T|B=T) A-E-M";
-        net.resetVariables();
-        ve = new VariableEliminationAlgo(net.getNet(), s);
-        System.out.println(ve.RunAlgo());
     }
 
 }
@@ -251,3 +386,4 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
 
 // todo: test functions (input parsers), output to text file, documentation
+//          remove single valued rows
