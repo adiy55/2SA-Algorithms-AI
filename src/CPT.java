@@ -24,13 +24,20 @@ public class CPT {
         rows = new ArrayList<>();
     }
 
+    public void setRows(ArrayList<HashMap<String, String>> rows) {
+        this.rows = rows;
+    }
+
     public void addRow(HashMap<String, String> new_row) {
         rows.add(new_row);
     }
 
     public void setVarNames(HashSet<String> varNames) {
-        this.varNames = varNames;
-        calcAsciiVal();
+        this.asciiVal = 0;
+        this.varNames = new HashSet<>(varNames);
+        for (String name : varNames) {
+            asciiVal += nameAsAscii(name);
+        }
     }
 
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
@@ -61,10 +68,10 @@ public class CPT {
         }
     }
 
-    public void calcAsciiVal() {
-        asciiVal = 0;
-        varNames.stream().iterator().forEachRemaining(s -> asciiVal += nameAsAscii(s));
-    }
+//    public void calcAsciiVal() {
+//        asciiVal = 0;
+//        varNames.stream().iterator().forEachRemaining(s -> asciiVal += nameAsAscii(s));
+//    }
 
     public int nameAsAscii(String var_name) { // return sum of ascii values of variable name
         char[] name = var_name.toCharArray();
