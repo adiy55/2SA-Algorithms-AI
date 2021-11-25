@@ -6,17 +6,32 @@ public class BayesBallAlgo implements NetworkAlgo {
     private String input;
     private String[] query_nodes;
 
+    /**
+     * Bayes Ball Algorithm constructor.
+     *
+     * @param data  Network
+     * @param input Query (parsed from the text file)
+     */
     public BayesBallAlgo(HashMap<String, VariableNode> data, String input) {
         this.data = data;
         this.input = input;
         parseInput();
     }
 
+    /**
+     * Bayes Ball Algorithm constructor (used in the Variable Elimination).
+     *
+     * @param data        Network
+     * @param query_nodes array containing the query variable and a hidden variable.
+     */
     public BayesBallAlgo(HashMap<String, VariableNode> data, String[] query_nodes) {
         this.data = data;
         this.query_nodes = query_nodes;
     }
 
+    /**
+     * Extracts the current query variables from the string given input.
+     */
     private void parseInput() {
         String[] s = input.split("\\|");
         String[] query_node_names = s[0].split("-");
@@ -40,31 +55,44 @@ public class BayesBallAlgo implements NetworkAlgo {
         return res;
     }
 
-    private String search() { // DFS
+    /**
+     * Checks if two nodes are independent.
+     * Adds all children and parent nodes of the first query node.
+     * If a path is found to the second query node- the nodes are dependant.
+     * The search follows the Bayes Ball algorithm rules.
+     *
+     * @return String result (no = dependant, y = independent)
+     */
+    private String search() { // DFS approach
         Stack<VariableNode> s = new Stack<>();
         VariableNode v = data.get(query_nodes[0]);
-        s.push(v);
-        v = s.pop();
-        add_children(s, v);
-        add_parents(s, v);
+        addChildren(s, v);
+        addParents(s, v);
         while (!s.isEmpty()) {
             if (v.getName().equals(query_nodes[1])) {
                 return "no";
             }
             v = s.pop();
             if (!v.isEvidence()) {
-                add_children(s, v);
-                if (v.isFromChild()) {
-                    add_parents(s, v);
+                addChildren(s, v); // can go to any child
+                if (v.isFromChild()) { // if a node is from child can go to any parent
+                    addParents(s, v);
                 }
-            } else if (v.isEvidence() && v.isFromParent()) {
-                add_parents(s, v);
+            }
+            if (v.isEvidence() && v.isFromParent()) { // if a node is evidence can go from parent to parent
+                addParents(s, v);
             }
         }
         return "yes";
     }
 
-    private void add_parents(Stack<VariableNode> s, VariableNode v) {
+    /**
+     * Add parent nodes that are not from child to stack.
+     *
+     * @param s Stack from search
+     * @param v current variable
+     */
+    private void addParents(Stack<VariableNode> s, VariableNode v) {
         for (int i = 0; i < v.getParents().size(); i++) {
             VariableNode currParent = v.getParents().get(i);
             if (!currParent.isFromChild()) {
@@ -74,13 +102,19 @@ public class BayesBallAlgo implements NetworkAlgo {
         }
     }
 
-    private void add_children(Stack<VariableNode> s, VariableNode v) {
+    /**
+     * Add children nodes.
+     *
+     * @param s Stack from search
+     * @param v current variable
+     */
+    private void addChildren(Stack<VariableNode> s, VariableNode v) {
         for (int i = 0; i < v.getChildren().size(); i++) {
             VariableNode currChild = v.getChildren().get(i);
-            if (!currChild.isFromParent()) {
-                currChild.setFromParent(true);
-                s.push(currChild);
-            }
+//            if (!currChild.isFromParent()) {
+            currChild.setFromParent(true);
+            s.push(currChild);
+//            }
         }
     }
 
