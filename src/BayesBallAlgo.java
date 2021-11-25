@@ -69,17 +69,16 @@ public class BayesBallAlgo implements NetworkAlgo {
         addChildren(s, v);
         addParents(s, v);
         while (!s.isEmpty()) {
+            v = s.pop();
             if (v.getName().equals(query_nodes[1])) {
                 return "no";
             }
-            v = s.pop();
             if (!v.isEvidence()) {
                 addChildren(s, v); // can go to any child
                 if (v.isFromChild()) { // if a node is from child can go to any parent
                     addParents(s, v);
                 }
-            }
-            if (v.isEvidence() && v.isFromParent()) { // if a node is evidence can go from parent to parent
+            } else if (v.isEvidence() && v.isFromParent()) { // if a node is evidence can go from parent to parent
                 addParents(s, v);
             }
         }
@@ -111,10 +110,10 @@ public class BayesBallAlgo implements NetworkAlgo {
     private void addChildren(Stack<VariableNode> s, VariableNode v) {
         for (int i = 0; i < v.getChildren().size(); i++) {
             VariableNode currChild = v.getChildren().get(i);
-//            if (!currChild.isFromParent()) {
-            currChild.setFromParent(true);
-            s.push(currChild);
-//            }
+            if (!currChild.isFromParent()) {
+                currChild.setFromParent(true);
+                s.push(currChild);
+            }
         }
     }
 
