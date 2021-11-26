@@ -27,6 +27,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         ancestorNodes = new HashSet<>();
         parseInput(input);
         filterEvidence();
+        filterAncestors();
+        System.out.println(input);
     }
 
     /**
@@ -85,75 +87,160 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 v.getCPT().getRows().remove(i); // delete irrelevant hashmap
             }
         }
-        if (v.getCPT().getRows().size() <= 1) {
+        if (v.getCPT().getRows().size() == 1) {
             v.getCPT().setRows(new ArrayList<>());
         }
     }
 
-    private HashSet<String> filterAncestors(VariableNode v) { // any node that is not an ancestor of the query or evidence nodes is irrelevant
-        HashSet<String> node_names = new HashSet<>();
-        Queue<VariableNode> queue = new LinkedList<>();
-        queue.add(v);
-        while (!queue.isEmpty()) {
-            v = queue.poll();
-            for (VariableNode parent : v.getParents()) {
-                if (parent.isEvidence() || parent.getName().equals(query[0])) {
-                    return node_names;
+    // todo: normalize: check if num multiplications is zero. check parents of evidence node (bayes ball with query node)
+    // todo: fix bug
+    private void filterAncestors() { // any node that is not an ancestor of the query or evidence nodes is irrelevant
+        HashSet<String> keep = new HashSet<>();
+        HashSet<String> remove = new HashSet<>();
+        for (VariableNode v : data.values()) {
+            boolean isIndependent = false;
+            if (v.isEvidence() || v.getName().equals(query[0])) {
+                keep.add(v.getName());
+                Queue<VariableNode> queue = new LinkedList<>(v.getParents());
+                while (!queue.isEmpty()) {
+                    VariableNode curr = queue.poll();
+                    if (isIndependent || remove.contains(curr.getName())) {
+                        remove.add(curr.getName());
+                    } else {
+                        String[] input = new String[]{query[0], curr.getName()};
+                        BayesBallAlgo bba = new BayesBallAlgo(data, input);
+                        String res = bba.RunAlgo();
+                        if (res.equals("yes")) {
+                            remove.add(curr.getName());
+                            isIndependent = true;
+                        } else {
+                            keep.add(curr.getName());
+                        }
+                    }
+                    if (!curr.getParents().isEmpty()) {
+                        queue.addAll(curr.getParents());
+                    }
                 }
-                queue.add(parent);
             }
-            node_names.add(v.getName());
         }
-        return new HashSet<>();
+        for (VariableNode v : data.values()) {
+            if (!keep.contains(v.getName())) {
+                remove.add(v.getName());
+            }
+        }
+
+        for (String remove_var : remove) {
+            for (VariableNode v : data.values()) {
+                if (v.getCPT().getVarNames().contains(remove_var) && !v.getName().equals(query[0])) {
+                    v.setCPTUsed(true);
+                }
+            }
+        }
+
+        System.out.println("REMOVE: " + remove);
+        System.out.println("KEEP: " + keep);
+
+
+//        for (String ancestor : ancestorNodes) {
+//            String[] input = new String[]{query[0], ancestor};
+//            BayesBallAlgo bba = new BayesBallAlgo(data, input);
+//            String res = bba.RunAlgo();
+//            if (res.equals("yes")) {
+//                ancestorNodes.remove(ancestor);
+//            }
+//        }
+//        System.out.println(ancestorNodes);
     }
+
+
+//    private void filterAncestors() {
+//        HashSet<String> node_names = new HashSet<>();
+//        for (VariableNode v : data.values()) {
+////            if (v.isEvidence()) {
+//            Queue<VariableNode> queue = new LinkedList<>();
+//            queue.add(v);
+//            while (!queue.isEmpty()) {
+//                VariableNode curr = queue.poll();
+//                if(!curr.isEvidence() || !curr.getName().equals(query[0])) {
+//                    node_names.add(curr.getName());
+//                    if (!curr.getParents().isEmpty()) {
+//                        queue.addAll(curr.getParents());
+//                    }
+//                }
+//            }
+//        }
+//    }
+//        System.out.println(node_names);
+//}
 
     @Override
     public String RunAlgo() {
         String res = "";
-        for (int i = 0; i < hidden.size(); i++) {
-            ancestorNodes.addAll(filterAncestors(data.get(hidden.get(i))));
-        }
-        for (int i = hidden.size() - 1; i >= 0; i--) {
-            if (ancestorNodes.contains(data.get(hidden.get(i)).getName())) {
-                hidden.remove(i);
-            }
-        }
-        System.out.println(ancestorNodes);
-//        for (String name : ancestorNodes) {
-//            data.get(name).setCPTUsed(true);
+        CPT result;
+
+//        Queue<VariableNode> queue = new LinkedList<>(data.get(query[0]).getParents());
+//        while (!queue.isEmpty()) {
+//            VariableNode curr = queue.poll();
+//            ancestorNodes.add(curr.getName());
+//            if (!curr.getParents().isEmpty()) {
+//                queue.addAll(curr.getParents());
+//            }
 //        }
-        for (int i = hidden.size() - 1; i >= 0; i--) {
-            String[] input = new String[]{query[0], hidden.get(i)};
-            BayesBallAlgo bba = new BayesBallAlgo(data, input);
-            String bba_res = bba.RunAlgo();
-            if (bba_res.equals("yes")) {
-                data.get(hidden.get(i)).setCPTUsed(true);
-            }
-        }
+
+//        ancestorNodes.add(query[0]);
+
+//        for (int i = hidden.size() - 1; i >= 0; i--) {
+//            String[] input = new String[]{query[0], hidden.get(i)};
+//            BayesBallAlgo bba = new BayesBallAlgo(data, input);
+//            String bba_res = bba.RunAlgo();
+//            if (bba_res.equals("yes")) {
+//                data.get(hidden.get(i)).setCPTUsed(true);
+////                hidden.remove(i);
+//            }
+//        }
+
+//        System.out.println("HIDDEN: " + hidden);
+
         for (String s : hidden) {
             ArrayList<CPT> curr_factors = getFactors(s);
+//            if (curr_factors.size() > 1) {
             CPT cpt_eliminated = eliminate(runJoin(curr_factors), s);
             factors.add(cpt_eliminated);
+//            }
         }
+
         ArrayList<CPT> query_factors = getFactors(query[0]);
-        CPT result = normalize(runJoin(query_factors));
+        result = normalize(runJoin((query_factors)));
+
+
         for (int i = 0; i < result.getRows().size(); i++) {
             if (result.getRows().get(i).get(query[0]).equals(query[1])) {
                 res = String.format("%s,%d,%d", result.getRows().get(i).get("P"), nAdd, nMul);
                 break;
             }
         }
+
+
         for (VariableNode v : data.values()) { // reset nodes for next query
             v.setCPTUsed(false);
             v.initCPT();
         }
+
+
         return res;
     }
 
-    private boolean checkCPT(CPT cpt) {
-        HashSet<String> duplicates = getDuplicates(cpt.getVarNames(), ancestorNodes);
-        return duplicates.isEmpty();
-    }
+//    private boolean checkCPT(VariableNode v) {
+//        if (v.getName().equals(query[0])) {
+//            return true;
+//        }
+//        for (String variable : ancestorNodes) {
+//            if (v.getCPT().getVarNames().contains(variable)) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     /**
      * Gets all factors that contain the hidden variable and sorts them.
@@ -166,16 +253,12 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         ArrayList<CPT> curr_factors = new ArrayList<>();
         VariableNode v = data.get(hidden);
         if (!v.isCPTUsed()) { // add current hidden node cpt
-            if (checkCPT(v.getCPT())) {
-                curr_factors.add(v.getCPT());
-            }
+            curr_factors.add(v.getCPT());
             v.setCPTUsed(true);
         }
         for (int i = 0; i < v.getChildren().size(); i++) { // add current nodes children cpts
             if (!v.getChildren().get(i).isCPTUsed()) {
-                if (checkCPT(v.getChildren().get(i).getCPT())) {
-                    curr_factors.add(v.getChildren().get(i).getCPT());
-                }
+                curr_factors.add(v.getChildren().get(i).getCPT());
                 v.getChildren().get(i).setCPTUsed(true);
             }
         }
@@ -185,13 +268,13 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             }
         }
         curr_factors.sort(this::compare);
-//        System.out.println("Hidden: " + hidden);
-//        for (CPT cpt : curr_factors) {
-//            for (int i = 0; i < cpt.getRows().size(); i++) {
-//                System.out.println(cpt.getVarNames() + " " + cpt.getRows().get(i));
-//            }
-//        }
-//        System.out.println("-----");
+        System.out.println("Hidden: " + hidden);
+        for (CPT cpt : curr_factors) {
+            for (int i = 0; i < cpt.getRows().size(); i++) {
+                System.out.println(cpt.getVarNames() + " " + cpt.getRows().get(i));
+            }
+        }
+        System.out.println("-----");
         return curr_factors;
     }
 
@@ -204,13 +287,15 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     private CPT runJoin(ArrayList<CPT> curr_factors) {
         while (curr_factors.size() > 1) {
             CPT res = join(curr_factors.remove(1), curr_factors.remove(0));
+//            if (res.getRows().size() > 1) { // todo: ???
             curr_factors.add(res);
             curr_factors.sort(this::compare);
+//            }
         }
         if (curr_factors.size() == 1) {
             return curr_factors.get(0);
         }
-        System.out.println("bad cpt");
+//        System.out.println("bad cpt!");
         return new CPT();
     }
 
@@ -220,7 +305,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      *
      * @param cpt1 CPT object
      * @param cpt2 CPT object
-     * @return // todo
+     * @return 0 if x == y, a value less than 0 if x < y, a value greater than 0 if x > y
      */
     public int compare(CPT cpt1, CPT cpt2) {
         int diff = cpt1.getRows().size() - cpt2.getRows().size();
@@ -290,7 +375,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @param row2       a row from the smaller CPT
      * @return if joint variables outcomes match in both rows
      */
-    private boolean isRowMatch(HashSet<String> duplicates, HashMap<String, String> row1, HashMap<String, String> row2) {
+    private boolean isRowMatch
+    (HashSet<String> duplicates, HashMap<String, String> row1, HashMap<String, String> row2) {
         for (String variable : duplicates) {
             if (!row1.get(variable).equals(row2.get(variable))) {
                 return false;
@@ -308,6 +394,9 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @return CPT object without hidden variable
      */
     private CPT eliminate(CPT curr_factor, String hidden) {
+//        if(curr_factor.getVarNames().size() == 1){
+//            return curr_factor;
+//        }
         Map<String, Double> mapped_probabilities = new HashMap<>(); // map for saving the new probabilities
         CPT new_factor = new CPT();
         HashSet<String> new_vars = new HashSet<>(curr_factor.getVarNames());
@@ -341,6 +430,9 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @return CPT with normalized probabilities
      */
     private CPT normalize(CPT query_factor) {
+        if (nMul == 0) {
+            return query_factor;
+        }
         double probabilities_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
         for (int i = 1; i < query_factor.getRows().size(); i++) { // calculate probabilities sum
             probabilities_sum += Double.parseDouble(query_factor.getRows().get(i).get("P"));
@@ -368,5 +460,5 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 //- multiply according to variable outcome
 
 
-// todo: test functions (input parsers), output to text file, documentation
+// todo: test functions (input parsers), documentation
 //        remove single valued rows
