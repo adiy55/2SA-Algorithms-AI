@@ -33,7 +33,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      */
     private void parseInput(String input) {
         String[] s = input.split(" ");
-        hidden = new ArrayList<>(Arrays.stream(s[1].split("-")).toList());
+        List<String> list = new ArrayList<>(Arrays.asList(s[1].split("-")));
+        hidden = new ArrayList<>(list);
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s[0]);
         String inside_parenthesis = "";
@@ -156,7 +157,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
         for (int i = 0; i < result.getRows().size(); i++) { // find the row the contains the query outcome
             if (result.getRows().get(i).get(query[0]).equals(query[1])) {
-                res = String.format("%s,%d,%d", result.getRows().get(i).get("P"), nAdd, nMul); // save result
+                res = String.format("%s,%d,%d", result.getRows().get(i).get("probability"), nAdd, nMul); // save result
                 break;
             }
         }
@@ -255,10 +256,10 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 HashMap<String, String> row1 = cpt1.getRows().get(j);
                 if (isRowMatch(duplicates, row1, row2)) { // call isRowMatch helper function
                     HashMap<String, String> new_row = new HashMap<>();
-                    double res = Double.parseDouble(row1.get("P")) * Double.parseDouble(row2.get("P"));
+                    double res = Double.parseDouble(row1.get("probability")) * Double.parseDouble(row2.get("probability"));
                     new_row.putAll(row1); // add all keys and values from rows
                     new_row.putAll(row2);
-                    new_row.put("P", res + ""); // insert new probability, overwrites previous value
+                    new_row.put("probability", res + ""); // insert new probability, overwrites previous value
                     nMul++;
                     result_factor.addRow(new_row);
                 }
@@ -292,8 +293,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @param row2       a row from the smaller CPT
      * @return if joint variables outcomes match in both rows
      */
-    private boolean isRowMatch
-    (HashSet<String> duplicates, HashMap<String, String> row1, HashMap<String, String> row2) {
+    private boolean isRowMatch(HashSet<String> duplicates, HashMap<String, String> row1, HashMap<String, String> row2) {
         for (String variable : duplicates) {
             if (!row1.get(variable).equals(row2.get(variable))) {
                 return false;
@@ -320,7 +320,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             HashMap<String, String> curr_row = curr_factor.getRows().get(i);
             HashMap<String, String> new_row = new HashMap<>(curr_row);
             new_row.remove(hidden); // remove hidden variable from HashMap
-            double probability = Double.parseDouble(new_row.remove("P")); // parse probability of old row
+            double probability = Double.parseDouble(new_row.remove("probability")); // parse probability of old row
             String curr_key = new_row.toString(); // use new_row toString method as key for mapped_probabilities
             if (mapped_probabilities.containsKey(curr_key)) { // add probability to current value in map
                 double curr = mapped_probabilities.remove(curr_key);
@@ -332,7 +332,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             }
         }
         for (HashMap<String, String> row : new_factor.getRows()) { // insert calculated probabilities in new factor rows
-            row.put("P", mapped_probabilities.get(row.toString()).toString());
+            row.put("probability", mapped_probabilities.get(row.toString()).toString());
         }
         return new_factor;
     }
@@ -347,15 +347,15 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         if (nMul == 0) { // edge case: the query is a single cell
             return query_factor; // the CPT was not changed so it is already normalized
         }
-        double probabilities_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
+        double probabilities_sum = Double.parseDouble(query_factor.getRows().get(0).get("probability"));
         for (int i = 1; i < query_factor.getRows().size(); i++) { // calculate probabilities sum
-            probabilities_sum += Double.parseDouble(query_factor.getRows().get(i).get("P"));
+            probabilities_sum += Double.parseDouble(query_factor.getRows().get(i).get("probability"));
             nAdd++;
         }
         for (int i = 0; i < query_factor.getRows().size(); i++) { // normalize probabilities by dividing each probability by the total sum
-            double normalized = Double.parseDouble(query_factor.getRows().get(i).get("P")) / probabilities_sum;
+            double normalized = Double.parseDouble(query_factor.getRows().get(i).get("probability")) / probabilities_sum;
             BigDecimal res = new BigDecimal(normalized).setScale(5, RoundingMode.HALF_UP); // round to 5 digits after the decimal point (HALF_UP rounds fractions >=0.5 up, otherwise down)
-            query_factor.getRows().get(i).put("P", res.toString()); // insert normalized probability
+            query_factor.getRows().get(i).put("probability", res.toString()); // insert normalized probability
         }
         return query_factor;
     }
