@@ -5,12 +5,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VariableEliminationAlgo implements NetworkAlgo {
-    private HashMap<String, VariableNode> data;
-    private String[] query;
-    private ArrayList<String> hidden;
-    private ArrayList<CPT> factors;
-    private int nMul;
-    private int nAdd;
+    private HashMap<String, VariableNode> data; // pointer to network
+    private String[] query; // query variable [0]; query output [1]
+    private ArrayList<String> hidden; // hidden variables (parsed from the input)
+    private ArrayList<CPT> factors; // // stores CPTs of previously eliminated variables
+    private int nMul; // counts number of multiplications
+    private int nAdd; // counts number of additions
 
     /**
      * Variable Elimination Algorithm constructor.
@@ -25,7 +25,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         nMul = nAdd = 0;
         parseInput(input);
         filterEvidence();
-        filterAncestors();
+        filterIndependentNodes();
     }
 
     /**
@@ -89,9 +89,17 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
     }
 
-    private void filterAncestors() { // any node that is not an ancestor of the query or evidence nodes is irrelevant
+    /**
+     * Finds nodes that are not ancestors of the query or evidence nodes.
+     * For each hidden node:
+     * 1. Checks if hidden node is not an ancestor.
+     * 2. If it is an ancestor, uses Bayes Ball to check if the hidden node is independent of the query given the evidence.
+     * Lastly, each CPT that contains a variable that suits one of the conditions above is marked as used.
+     * It is irrelevant to the query and marking it as used will ensure the CPT will not be used during Variable Elimination.
+     */
+    private void filterIndependentNodes() { // any node that is not an ancestor of the query or evidence nodes is irrelevant
         HashSet<String> ancestors = new HashSet<>();
-        for (VariableNode v : data.values()) {
+        for (VariableNode v : data.values()) { // find all ancestor nodes
             if (v.isEvidence() || v.getName().equals(query[0])) {
                 ancestors.add(v.getName());
                 Queue<VariableNode> queue = new LinkedList<>(v.getParents());
@@ -104,22 +112,22 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 }
             }
         }
-        HashSet<String> unnecessary_nodes = new HashSet<>();
-        for (String hidden_var : hidden) {
-            if (!ancestors.contains(hidden_var)) {
-                unnecessary_nodes.add(hidden_var);
-            } else {
+        HashSet<String> independent_nodes = new HashSet<>();
+        for (String hidden_var : hidden) { // find independent hidden nodes
+            if (!ancestors.contains(hidden_var)) { // check if hidden is not an ancestor
+                independent_nodes.add(hidden_var);
+            } else { // use Bayes Ball to check if ancestor is independent of the query
                 String[] input = new String[]{query[0], hidden_var};
                 BayesBallAlgo bba = new BayesBallAlgo(data, input);
                 String res = bba.RunAlgo();
-                if (res.equals("yes")) {
-                    unnecessary_nodes.add(hidden_var);
+                if (res.equals("yes")) { // yes == independent
+                    independent_nodes.add(hidden_var);
                 }
             }
         }
-        for (String node: unnecessary_nodes) {
+        for (String node : independent_nodes) { // mark a CPT as used if it contains an independent node
             for (VariableNode v : data.values()) {
-                if (v.getCPT().getVarNames().contains(node))  {
+                if (v.getCPT().getVarNames().contains(node)) {
                     v.setCPTUsed(true);
                 }
             }
@@ -127,34 +135,36 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
 
+    /**
+     * Calls the functions in the order needed to run the algorithm.
+     *
+     * @return Formatted string: probability; number of additions; number of multiplications
+     */
     @Override
     public String RunAlgo() {
         String res = "";
-        CPT result;
 
-        for (String s : hidden) {
+        for (String s : hidden) { // eliminate hidden variables
             ArrayList<CPT> curr_factors = getFactors(s);
             CPT cpt_eliminated = eliminate(runJoin(curr_factors), s);
             factors.add(cpt_eliminated);
         }
 
+        // join and normalize the query factor (if needed)
         ArrayList<CPT> query_factors = getFactors(query[0]);
-        result = normalize(runJoin((query_factors)));
+        CPT result = normalize(runJoin((query_factors)));
 
-
-        for (int i = 0; i < result.getRows().size(); i++) {
+        for (int i = 0; i < result.getRows().size(); i++) { // find the row the contains the query outcome
             if (result.getRows().get(i).get(query[0]).equals(query[1])) {
-                res = String.format("%s,%d,%d", result.getRows().get(i).get("P"), nAdd, nMul);
+                res = String.format("%s,%d,%d", result.getRows().get(i).get("P"), nAdd, nMul); // save result
                 break;
             }
         }
-
 
         for (VariableNode v : data.values()) { // reset nodes for next query
             v.setCPTUsed(false);
             v.initCPT();
         }
-
 
         return res;
     }
@@ -341,8 +351,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @return CPT with normalized probabilities
      */
     private CPT normalize(CPT query_factor) {
-        if (nMul == 0) {
-            return query_factor;
+        if (nMul == 0) { // edge case: the query is a single cell
+            return query_factor; // the CPT was not changed so it is already normalized
         }
         double probabilities_sum = Double.parseDouble(query_factor.getRows().get(0).get("P"));
         for (int i = 1; i < query_factor.getRows().size(); i++) { // calculate probabilities sum
@@ -357,19 +367,4 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         return query_factor;
     }
 
-
-    // hidden outcomes == number of rows to add
-    // find rows with the same value according to the variables
-
 }
-
-
-//how to find index of num in table:
-//- find num of outputs until given variable (multiply them -> m = ans)
-//- step = table size / m
-//step will determine where each output starts and ends (<= len(table))
-//- multiply according to variable outcome
-
-
-// todo: test functions (input parsers), documentation
-//        remove single valued rows
