@@ -195,13 +195,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             }
         }
         curr_factors.sort(this::compare);
-        System.out.println("Hidden: " + hidden);
-        for (CPT cpt : curr_factors) {
-            for (int i = 0; i < cpt.getRows().size(); i++) {
-                System.out.println(cpt.getVarNames() + " " + cpt.getRows().get(i));
-            }
-        }
-        System.out.println("-----");
         return curr_factors;
     }
 
@@ -220,7 +213,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         if (curr_factors.size() == 1) {
             return curr_factors.get(0);
         }
-        return new CPT();
+        return new CPT(); // edge case: return empty CPT if there is none (i.e. no factors were found)
     }
 
     /**
