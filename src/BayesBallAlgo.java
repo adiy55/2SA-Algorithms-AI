@@ -31,20 +31,28 @@ public class BayesBallAlgo implements NetworkAlgo {
 
     /**
      * Extracts the current query variables from the string given input.
+     * Input examples:
+     * B-E|
+     * B-E|J=T
      */
     private void parseInput() {
         String[] s = input.split("\\|");
         String[] query_node_names = s[0].split("-");
-        if (s.length > 1) {
+        if (s.length > 1) { // might not be any evidence nodes
             String[] given_nodes = s[1].split(",");
             for (String given_node : given_nodes) {
                 String[] tmp = given_node.split("=");
-                data.get(tmp[0]).setEvidence(tmp[1]);
+                data.get(tmp[0]).setEvidence(tmp[1]); // set the given evidence of current node
             }
         }
         this.query_nodes = query_node_names;
     }
 
+    /**
+     * Calls the functions in the order needed to run the algorithm.
+     *
+     * @return string (search function output): yes = independent (no path was found), no = dependant (a path was found)
+     */
     @Override
     public String RunAlgo() {
         String res = search();
@@ -61,7 +69,7 @@ public class BayesBallAlgo implements NetworkAlgo {
      * If a path is found to the second query node- the nodes are dependant.
      * The search follows the Bayes Ball algorithm rules.
      *
-     * @return String result (no = dependant, y = independent)
+     * @return String result (no = dependant, yes = independent)
      */
     private String search() { // DFS approach
         Stack<VariableNode> s = new Stack<>();
