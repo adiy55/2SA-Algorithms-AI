@@ -94,7 +94,7 @@ public class BayesBallAlgo implements NetworkAlgo {
     }
 
     /**
-     * Add parent nodes that are not from child to stack.
+     * Add parent nodes tha have not been added from a child to the stack.
      *
      * @param s Stack from search
      * @param v current variable
@@ -110,7 +110,7 @@ public class BayesBallAlgo implements NetworkAlgo {
     }
 
     /**
-     * Add children nodes.
+     * Add children nodes that have not been added from a parent to the stack.
      *
      * @param s Stack from search
      * @param v current variable
