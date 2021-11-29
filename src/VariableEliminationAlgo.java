@@ -33,8 +33,10 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      */
     private void parseInput(String input) {
         String[] s = input.split(" ");
-        List<String> list = new ArrayList<>(Arrays.asList(s[1].split("-")));
-        hidden = new ArrayList<>(list);
+        if (s.length > 1) {
+            List<String> list = new ArrayList<>(Arrays.asList(s[1].split("-")));
+            hidden = new ArrayList<>(list);
+        }
         Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(s[0]);
         String inside_parenthesis = "";
@@ -354,7 +356,8 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
         for (int i = 0; i < query_factor.getRows().size(); i++) { // normalize probabilities by dividing each probability by the total sum
             double normalized = Double.parseDouble(query_factor.getRows().get(i).get("probability")) / probabilities_sum;
-            BigDecimal res = new BigDecimal(normalized).setScale(5, RoundingMode.HALF_UP); // round to 5 digits after the decimal point (HALF_UP rounds fractions >=0.5 up, otherwise down)
+            // round to 5 digits after the decimal point (HALF_UP rounds fractions >=0.5 up, otherwise down)
+            BigDecimal res = new BigDecimal(normalized).setScale(5, RoundingMode.HALF_UP).stripTrailingZeros();
             query_factor.getRows().get(i).put("probability", res.toString()); // insert normalized probability
         }
         return query_factor;
