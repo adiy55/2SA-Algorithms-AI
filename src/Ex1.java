@@ -5,6 +5,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Ex1 {
+    /*
+    The fundamental data structures used:
+    1. HashMap<String, VariableNode>: the key is the variable name, the value is a VariableNode object with attributes that represent each node
+    2. ArrayList<HashMap<String,String>>: the list represents the entire table, each HashMap is a row in the CPT.
+        They key may be the variable name and contain the outcome as its value. If the key name is "probability", the value is the probability of the row
+
+    The main advantages of a HashMap:
+    * There are no duplicates (each node is unique).
+    * The information can be accessed easily (returns a value in O(1)).
+    * Looping the keys or values of a HashMap is linear (O(n) runtime).
+     */
 
     public static void main(String[] args) {
         FileParser parser = new FileParser("input.txt");
