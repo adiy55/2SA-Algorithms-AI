@@ -61,37 +61,48 @@ public class CPT {
         }
     }
 
-    // how to find index of num in table:
-    //- find num of outputs until given variable (multiply them -> m = ans)
-    //- step = table size / m
-    //step will determine where each output starts and ends (<= len(table))
-    //- multiply according to variable outcome
-    // todo: finish documentation of this function
+    /*
+    How to match the variables and their outcomes with the probabilities:
+
+     How to match the variables and their outcomes with the probabilities of the node:
+     - m = the multiplication of the variables in the list until the target variable is reached (the target variable outcomes are also multiplied)
+     - step (number of iterations until the index of the outcomes list should be advanced): step = probabilities table size / m
+        loop table size:
+            j = current index of the table, outcome_index = current index in outcomes list
+            - if ((j > 0) && (j % step)) == 0: advance outcome_index
+            - if outcome_index == outcomes list size: outcome_index = 0 (restart from first outcome)
+
+     The step size was calculated according to the order in the XML:
+            - The given nodes of each variable according to the order in the file, then the variable itself.
+            - The outcomes order is also according to the order in the file.
+            - The first given node has the largest step and the outcome of the variable itself alternate every iteration.
+     */
+
     /**
      * Initializes the rows with the probabilities from the table according using the list of variables.
      * The variables are in a list (maintains the inserted order) since their order is important to determine their
      * outcomes in each row!
      *
-     * @param variableNodes
-     * @param table
+     * @param variableNodes ArrayList of VariableNodes
+     * @param table         probabilities of the current variable
      */
     private void initRows(ArrayList<VariableNode> variableNodes, ArrayList<Double> table) {
         int div = 1, step;
         for (VariableNode v : variableNodes) {
-            int outcome_index = 0;
+            int outcome_index = 0; // outcome index = current index in the variable outcomes list
             div *= v.getOutcomes().size();
             step = table.size() / div;
-            for (int j = 0; j < table.size(); j++) {
-                if (j > 0 && j % step == 0) {
-                    outcome_index++;
+            for (int j = 0; j < table.size(); j++) { // j = current index of the table
+                if (j > 0 && j % step == 0) { // check if step size is reached
+                    outcome_index++; // advance to next outcome
                 }
-                if (outcome_index >= v.getOutcomes().size()) {
+                if (outcome_index >= v.getOutcomes().size()) { // if index is out of bounds restart from first outcome
                     outcome_index = 0;
                 }
-                rows.get(j).put(v.getName(), v.getOutcomes().get(outcome_index));
+                rows.get(j).put(v.getName(), v.getOutcomes().get(outcome_index)); // add key (variable name) and value (outcome) in the jth hashmap
             }
         }
-        for (int i = 0; i < table.size(); i++) {
+        for (int i = 0; i < table.size(); i++) { // add probability to each row
             rows.get(i).put("probability", table.get(i).toString());
         }
     }
