@@ -5,6 +5,11 @@ public interface NetworkAlgo {
      *
      * @return Output
      */
-    String RunAlgo();
+    String RunAlgo() throws Exception;
+
+    /**
+     * Reset variable attributes to their default values after each query.
+     */
+    void ResetAttributes();
 
 }
