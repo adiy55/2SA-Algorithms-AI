@@ -14,11 +14,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
-public class FileParser {
-    private String filename;
-    private HashMap<String, VariableNode> data;
-    private ArrayList<String> queries;
+/*
+Document Object Model (DOM) is an interface that represent an XML file as a tree structure and enables programs to access the contents of the file.
+XPath enables navigation through a DOM to locate nodes.
+I used XPath to retrieve specific elements from the XML and initialize them in a data structure that represents the network.
+ */
 
+public class FileParser {
+    private String filename; // path of the input file
+    private HashMap<String, VariableNode> data; // String = variable name
+    private ArrayList<String> queries; // list of unparsed queries (they are parsed individually in each algorithm)
+
+    /**
+     * File parser constructor.
+     *
+     * @param filename input file path
+     */
     public FileParser(String filename) {
         this.filename = filename;
         this.data = new HashMap<>();
@@ -34,9 +45,9 @@ public class FileParser {
         Scanner sc = new Scanner(new File(filename));
         while (sc.hasNext()) {
             String currLine = sc.nextLine();
-            if (currLine.endsWith(".xml")) {
+            if (currLine.endsWith(".xml")) { // parses XML
                 readXML(currLine);
-            } else {
+            } else { // adds query to list
                 queries.add(currLine);
             }
         }
@@ -45,8 +56,8 @@ public class FileParser {
     private void readXML(String xml_path) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new File(xml_path));
         XPath xp = XPathFactory.newInstance().newXPath();
-        parseVariable(xp, doc);
-        parseDefinition(xp, doc);
+        parseVariable(xp, doc); // initializes variable nodes and sets their outcomes
+        parseDefinition(xp, doc); // sets table, parent and children nodes
     }
 
     private void parseVariable(XPath xp, Document doc) throws XPathExpressionException {
@@ -54,6 +65,7 @@ public class FileParser {
         for (int i = 0; i < nodes.getLength(); i++) {
             NodeList currName = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/NAME", i + 1)).evaluate(doc, XPathConstants.NODESET);
             NodeList currOutcome = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/OUTCOME", i + 1)).evaluate(doc, XPathConstants.NODESET);
+
             String name = currName.item(0).getTextContent();
             ArrayList<String> outcomes = new ArrayList<>();
             for (int j = 0; j < currOutcome.getLength(); j++) {
@@ -83,20 +95,26 @@ public class FileParser {
             for (int j = 0; j < currGiven.getLength(); j++) {
                 String s = currGiven.item(j).getTextContent();
                 given.add(data.get(s));
-                data.get(s).addChild(data.get(currName.item(0).getTextContent()));
+                data.get(s).addChild(data.get(currName.item(0).getTextContent())); // set the current node as the child of its parent node (given)
             }
             vn.setTable(table);
             vn.setParents(given);
-            vn.initCPT();
+            vn.initCPT(); // initialize CPT for each node
         }
     }
 
-
+    /**
+     * @return HashMap containing the network
+     */
     public HashMap<String, VariableNode> getData() {
         return data;
     }
 
+    /**
+     * @return ArrayList containing the queries
+     */
     public ArrayList<String> getQueries() {
         return queries;
     }
+
 }
