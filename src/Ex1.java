@@ -5,30 +5,38 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Ex1 {
-    // todo: ./input??? check private and public functions
-
-    // todo: add try and catch around parse function and returned query string (return space/empty string???)
+    // todo: ./input???
 
     public static void main(String[] args) {
-        try {
-            FileParser parser = new FileParser("input.txt");
-            HashMap<String, VariableNode> net = parser.getData();
-            ArrayList<String> queries = parser.getQueries();
-            ArrayList<String> results = new ArrayList<>();
-            for (String curr_query : queries) {
-                if (curr_query.contains("P(")) {
-                    VariableEliminationAlgo vea = new VariableEliminationAlgo(net, curr_query);
-                    String res = vea.RunAlgo();
-                    results.add(res);
-                } else {
-                    BayesBallAlgo bba = new BayesBallAlgo(net, curr_query);
-                    String res = bba.RunAlgo();
-                    results.add(res);
+        FileParser parser = new FileParser("input.txt");
+        HashMap<String, VariableNode> net = parser.getData();
+        ArrayList<String> queries = parser.getQueries();
+        ArrayList<String> results = new ArrayList<>();
+        String res;
+        for (String curr_query : queries) {
+            if (curr_query.contains("P(")) {
+                VariableEliminationAlgo vea = new VariableEliminationAlgo(net, curr_query);
+                try { // ensures the program keeps running even if there is a problem with a query
+                    res = vea.RunAlgo();
+                } catch (Exception e) {
+                    res = "";
+                    vea.ResetAttributes();
                 }
-                for (VariableNode v : net.values()) {
-                    v.setEvidence(null);
+            } else {
+                BayesBallAlgo bba = new BayesBallAlgo(net, curr_query);
+                try {  // ensures the program keeps running even if there is a problem with a query
+                    res = bba.RunAlgo();
+                } catch (Exception e) {
+                    res = "";
+                    bba.ResetAttributes();
                 }
             }
+            results.add(res);
+            for (VariableNode v : net.values()) { // reset evidence for next query
+                v.setEvidence(null);
+            }
+        }
+        try { // write query results to a text file
             File output = new File("output.txt");
             FileWriter writer = new FileWriter(output);
             for (int i = 0; i < results.size(); i++) {
@@ -42,9 +50,6 @@ public class Ex1 {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-
-    // todo: test functions (input parsers), documentation, catch invalid input
 }
