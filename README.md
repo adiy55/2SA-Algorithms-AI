@@ -27,7 +27,7 @@ Runs on **Java 8**.
 
 ### File Samples:
 
-The ``samples`` directory contains example files that can be used to run the algorithms:
+The ``samples directory`` contains example files that can be used to run the algorithms:
 
 * The ``xml`` file represents the Network and should be the first line in the text file used as an input.
 * The ``input`` files contain the xml path and the network queries.
