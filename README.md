@@ -1,6 +1,6 @@
 # 2SA-Algorithms-AI
 
-## Algorithms in Artificial Intelligence Project.
+## Algorithms in Artificial Intelligence Project
 
 This repository contains an implementation of Bayes Ball and Variable Elimination algorithms on a Bayesian Network.
 
