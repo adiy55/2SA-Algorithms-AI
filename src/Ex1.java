@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Ex1 {
-    // todo: ./input???
 
     public static void main(String[] args) {
         FileParser parser = new FileParser("input.txt");
