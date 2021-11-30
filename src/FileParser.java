@@ -22,8 +22,8 @@ I used XPath to retrieve specific elements from the XML and initialize them in a
 
 public class FileParser {
     private String filename; // path of the input file
-    private HashMap<String, VariableNode> data; // String = variable name
-    private ArrayList<String> queries; // list of unparsed queries (they are parsed individually in each algorithm)
+    private HashMap<String, VariableNode> data; // key = variable name
+    private ArrayList<String> queries; // list of unparsed queries (they are parsed individually in each algorithm's class)
 
     /**
      * File parser constructor.
@@ -44,11 +44,11 @@ public class FileParser {
     private void parseFile() throws IOException, XPathExpressionException, ParserConfigurationException, SAXException {
         Scanner sc = new Scanner(new File(filename));
         while (sc.hasNext()) {
-            String currLine = sc.nextLine();
-            if (currLine.endsWith(".xml")) { // parses XML
-                readXML(currLine);
+            String curr_line = sc.nextLine();
+            if (curr_line.endsWith(".xml")) { // parses XML
+                readXML(curr_line);
             } else { // adds query to list
-                queries.add(currLine);
+                queries.add(curr_line);
             }
         }
     }
@@ -63,13 +63,13 @@ public class FileParser {
     private void parseVariable(XPath xp, Document doc) throws XPathExpressionException {
         NodeList nodes = (NodeList) xp.compile("//VARIABLE").evaluate(doc, XPathConstants.NODESET);
         for (int i = 0; i < nodes.getLength(); i++) {
-            NodeList currName = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/NAME", i + 1)).evaluate(doc, XPathConstants.NODESET);
-            NodeList currOutcome = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/OUTCOME", i + 1)).evaluate(doc, XPathConstants.NODESET);
+            NodeList curr_name = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/NAME", i + 1)).evaluate(doc, XPathConstants.NODESET);
+            NodeList curr_outcome = (NodeList) xp.compile(String.format("/NETWORK/VARIABLE[%d]/OUTCOME", i + 1)).evaluate(doc, XPathConstants.NODESET);
 
-            String name = currName.item(0).getTextContent();
+            String name = curr_name.item(0).getTextContent();
             ArrayList<String> outcomes = new ArrayList<>();
-            for (int j = 0; j < currOutcome.getLength(); j++) {
-                String s = currOutcome.item(j).getTextContent();
+            for (int j = 0; j < curr_outcome.getLength(); j++) {
+                String s = curr_outcome.item(j).getTextContent();
                 outcomes.add(s);
             }
             VariableNode vn = new VariableNode(name, outcomes);
@@ -80,22 +80,22 @@ public class FileParser {
     private void parseDefinition(XPath xp, Document doc) throws XPathExpressionException {
         NodeList nodes = (NodeList) xp.compile("//DEFINITION").evaluate(doc, XPathConstants.NODESET);
         for (int i = 0; i < nodes.getLength(); i++) {
-            NodeList currName = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/FOR", i + 1)).evaluate(doc, XPathConstants.NODESET);
-            NodeList currTable = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/TABLE", i + 1)).evaluate(doc, XPathConstants.NODESET);
-            NodeList currGiven = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/GIVEN", i + 1)).evaluate(doc, XPathConstants.NODESET);
+            NodeList curr_name = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/FOR", i + 1)).evaluate(doc, XPathConstants.NODESET);
+            NodeList curr_table = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/TABLE", i + 1)).evaluate(doc, XPathConstants.NODESET);
+            NodeList curr_given = (NodeList) xp.compile(String.format("/NETWORK/DEFINITION[%d]/GIVEN", i + 1)).evaluate(doc, XPathConstants.NODESET);
 
-            VariableNode vn = data.get(currName.item(0).getTextContent()); // current node
-            String[] tableString = currTable.item(0).getTextContent().split(" ");
+            VariableNode vn = data.get(curr_name.item(0).getTextContent()); // current node
+            String[] tableString = curr_table.item(0).getTextContent().split(" ");
 
             ArrayList<Double> table = new ArrayList<>();
             for (String value : tableString) {
                 table.add(Double.parseDouble(value));
             }
             ArrayList<VariableNode> given = new ArrayList<>();
-            for (int j = 0; j < currGiven.getLength(); j++) {
-                String s = currGiven.item(j).getTextContent();
+            for (int j = 0; j < curr_given.getLength(); j++) {
+                String s = curr_given.item(j).getTextContent();
                 given.add(data.get(s));
-                data.get(s).addChild(data.get(currName.item(0).getTextContent())); // set the current node as the child of its parent node (given)
+                data.get(s).addChild(data.get(curr_name.item(0).getTextContent())); // set the current node as the child of its parent node (given)
             }
             vn.setTable(table);
             vn.setParents(given);

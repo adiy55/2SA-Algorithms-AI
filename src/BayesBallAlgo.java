@@ -19,7 +19,7 @@ public class BayesBallAlgo implements NetworkAlgo {
     }
 
     /**
-     * Bayes Ball Algorithm constructor (used in the Variable Elimination).
+     * Bayes Ball Algorithm constructor (used in Variable Elimination).
      *
      * @param data        Network
      * @param query_nodes array containing the query variable and a hidden variable.

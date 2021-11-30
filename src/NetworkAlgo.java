@@ -8,7 +8,7 @@ public interface NetworkAlgo {
     String RunAlgo() throws Exception;
 
     /**
-     * Reset variable attributes to their default values after each query.
+     * Resets variable attributes to their default values after running a query.
      */
     void ResetAttributes();
 

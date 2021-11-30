@@ -47,7 +47,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         ArrayList<CPT> query_factors = getFactors(query[0]);
         CPT result = normalize(runJoin((query_factors)));
 
-        for (int i = 0; i < result.getRows().size(); i++) { // find the row the contains the query outcome
+        for (int i = 0; i < result.getRows().size(); i++) { // find the row that contains the query outcome
             if (result.getRows().get(i).get(query[0]).equals(query[1])) {
                 res = String.format("%s,%d,%d", result.getRows().get(i).get("probability"), nAdd, nMul); // save result
                 break;
@@ -79,7 +79,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             List<String> list = new ArrayList<>(Arrays.asList(s[1].split("-")));
             hidden = new ArrayList<>(list);
         }
-        Pattern p = Pattern.compile("\\(([^P(]+)\\)", Pattern.CASE_INSENSITIVE);
+        Pattern p = Pattern.compile("\\(([^P(]+)\\)"); // extracts string inside the parenthesis P()
         Matcher m = p.matcher(s[0]);
         String inside_parenthesis = "";
         while (m.find()) {
@@ -91,13 +91,13 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             String[] given_nodes = query_evidence[1].split(",");
             for (String given_node : given_nodes) {
                 String[] tmp = given_node.split("=");
-                data.get(tmp[0]).setEvidence(tmp[1]);
+                data.get(tmp[0]).setEvidence(tmp[1]); // set the given evidence of current node
             }
         }
     }
 
     /**
-     * Keeps the rows that match the outcome of the evidence nodes from the node itself, and it's children.
+     * Keeps the rows that match the outcome of the evidence nodes in the CPT node itself, and it's children.
      */
     private void filterEvidence() {
         for (VariableNode v : data.values()) {
@@ -111,7 +111,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     /**
-     * Deletes rows that don't match the outcome and removes the evidence variable from rows that match the outcome.
+     * Deletes CPT rows that don't match the outcome and removes the evidence variable from rows that match the outcome.
      *
      * @param v            VariableNode
      * @param evidence_var Name of evidence variable
@@ -136,11 +136,15 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
     /**
      * Finds nodes that are not ancestors of the query or evidence nodes.
+     * <p>
      * For each hidden node:
+     * <p>
      * 1. Checks if hidden node is not an ancestor.
+     * <p>
      * 2. If it is an ancestor, uses Bayes Ball to check if the hidden node is independent of the query given the evidence.
-     * Lastly, each CPT that contains a variable that suits one of the conditions above is marked as used.
-     * It is irrelevant to the query and marking it as used will ensure the CPT will not be used during Variable Elimination.
+     * <p>
+     * Each CPT that contains a variable that suits one of the conditions above is marked as used.
+     * It is irrelevant to the query and this ensures that the CPT will not be used during Variable Elimination.
      */
     private void filterIndependentNodes() { // any node that is not an ancestor of the query or evidence nodes is irrelevant
         HashSet<String> ancestors = new HashSet<>();
@@ -165,7 +169,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 String[] input = new String[]{query[0], hidden_var};
                 BayesBallAlgo bba = new BayesBallAlgo(data, input);
                 String res = bba.RunAlgo();
-                if (res.equals("yes")) { // yes == independent
+                if (res.equals("yes")) { // yes = independent
                     independent_nodes.add(hidden_var);
                 }
             }
@@ -181,8 +185,9 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
 
     /**
-     * Gets all factors that contain the hidden variable and sorts them.
-     * Potential factors are: CPT of the hidden node, CPT of the hidden node's children, CPT of previously eliminated variables.
+     * Get a sorted list of all factors that contain the hidden variable.Potential factors are:
+     * <p>
+     * CPT of the hidden node, CPT of the hidden node's children, CPT of previously eliminated variables.
      *
      * @param hidden name of current hidden node
      * @return sorted ArrayList containing CPT objects of the relevant factors
@@ -200,7 +205,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 v.getChildren().get(i).setCPTUsed(true);
             }
         }
-        for (int i = factors.size() - 1; i >= 0; i--) { // add cpt of previously eliminated variables if contain current target node
+        for (int i = factors.size() - 1; i >= 0; i--) { // add cpt of previously eliminated variables if they contain the current target node
             if (factors.get(i).getVarNames().contains(hidden)) {
                 curr_factors.add(factors.remove(i));
             }
@@ -211,6 +216,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
     /**
      * Function runs join by adding the joined result of the two smallest CPTs to the list, then sorting it.
+     * Stops if there are one or less CPTs in the list.
      *
      * @param curr_factors List of CPT factors
      * @return Joined CPT object
@@ -245,9 +251,10 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     /**
-     * Joins two CPTs by the outcomes of their joint variables.
+     * Joins two CPTs by the matching outcomes of their joint variables.
      * The probabilities of rows with matching outcomes are multiplied.
-     * The result CPT size: [cpt1 size (the larger CPT)] * [multiplied number of outcomes of each unique variable is cpt2]
+     * <p>
+     * The result CPT size: [cpt1 size (the larger CPT)] * [multiplied num of outcomes of each unique variable in cpt2]
      *
      * @param cpt1 CPT object (cpt1 >= cpt2)
      * @param cpt2 CPT object (cpt2 <= cpt1)
@@ -296,7 +303,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     /**
-     * Checks duplicate key values are equal.
+     * Checks if the duplicate keys values of two rows are equal.
      *
      * @param duplicates Joint variables of two CPTs
      * @param row1       a row from the larger CPT
@@ -350,12 +357,12 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     /**
      * Normalize probabilities of the query variable to the range [0,1].
      *
-     * @param query_factor CPT containing only the query variable (after eliminating all hidden variables )
+     * @param query_factor CPT containing only the query variable (after eliminating all hidden variables)
      * @return CPT with normalized probabilities
      */
     private CPT normalize(CPT query_factor) {
         if (nMul == 0) { // edge case: the query is a single cell
-            return query_factor; // the CPT was not changed so it is already normalized
+            return query_factor; // the CPT is the original one, so it is already normalized
         }
         double probabilities_sum = Double.parseDouble(query_factor.getRows().get(0).get("probability"));
         for (int i = 1; i < query_factor.getRows().size(); i++) { // calculate probabilities sum
