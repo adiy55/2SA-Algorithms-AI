@@ -30,12 +30,35 @@ public class BayesBallAlgo implements NetworkAlgo {
     }
 
     /**
+     * Calls the functions in the order needed to run the algorithm.
+     *
+     * @return string (search function output): yes = independent (no path was found), no = dependant (a path was found)
+     */
+    @Override
+    public String RunAlgo() {
+        String res = search();
+        ResetAttributes();
+        return res;
+    }
+
+    /**
+     * Reset the variable attributes used in this algorithm.
+     */
+    @Override
+    public void ResetAttributes() {
+        for (VariableNode v : data.values()) {
+            v.setFromChild(false);
+            v.setFromParent(false);
+        }
+    }
+
+    /**
      * Extracts the current query variables from the string given input.
      * Input examples:
      * B-E|
      * B-E|J=T
      */
-    private void parseInput() {
+    public void parseInput() {
         String[] s = input.split("\\|");
         String[] query_node_names = s[0].split("-");
         if (s.length > 1) { // might not be any evidence nodes
@@ -46,21 +69,6 @@ public class BayesBallAlgo implements NetworkAlgo {
             }
         }
         this.query_nodes = query_node_names;
-    }
-
-    /**
-     * Calls the functions in the order needed to run the algorithm.
-     *
-     * @return string (search function output): yes = independent (no path was found), no = dependant (a path was found)
-     */
-    @Override
-    public String RunAlgo() {
-        String res = search();
-        for (VariableNode v : data.values()) {
-            v.setFromChild(false);
-            v.setFromParent(false);
-        }
-        return res;
     }
 
     /**

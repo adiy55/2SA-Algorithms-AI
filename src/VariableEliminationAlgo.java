@@ -29,6 +29,48 @@ public class VariableEliminationAlgo implements NetworkAlgo {
     }
 
     /**
+     * Calls the functions in the order needed to run the algorithm.
+     *
+     * @return Formatted string: probability; number of additions; number of multiplications
+     */
+    @Override
+    public String RunAlgo() {
+        String res = "";
+
+        for (String s : hidden) { // eliminate hidden variables
+            ArrayList<CPT> curr_factors = getFactors(s);
+            CPT cpt_eliminated = eliminate(runJoin(curr_factors), s);
+            factors.add(cpt_eliminated);
+        }
+
+        // join and normalize the query factor (if needed)
+        ArrayList<CPT> query_factors = getFactors(query[0]);
+        CPT result = normalize(runJoin((query_factors)));
+
+        for (int i = 0; i < result.getRows().size(); i++) { // find the row the contains the query outcome
+            if (result.getRows().get(i).get(query[0]).equals(query[1])) {
+                res = String.format("%s,%d,%d", result.getRows().get(i).get("probability"), nAdd, nMul); // save result
+                break;
+            }
+        }
+        ResetAttributes();
+
+        return res;
+    }
+
+    /**
+     * Reset the variable attributes used in this algorithm.
+     */
+    @Override
+    public void ResetAttributes() {
+        for (VariableNode v : data.values()) { // reset nodes for next query
+            v.setCPTUsed(false);
+            v.initCPT();
+        }
+
+    }
+
+    /**
      * Extracts the current query variables from the string given input.
      */
     private void parseInput(String input) {
@@ -139,40 +181,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
 
 
     /**
-     * Calls the functions in the order needed to run the algorithm.
-     *
-     * @return Formatted string: probability; number of additions; number of multiplications
-     */
-    @Override
-    public String RunAlgo() {
-        String res = "";
-
-        for (String s : hidden) { // eliminate hidden variables
-            ArrayList<CPT> curr_factors = getFactors(s);
-            CPT cpt_eliminated = eliminate(runJoin(curr_factors), s);
-            factors.add(cpt_eliminated);
-        }
-
-        // join and normalize the query factor (if needed)
-        ArrayList<CPT> query_factors = getFactors(query[0]);
-        CPT result = normalize(runJoin((query_factors)));
-
-        for (int i = 0; i < result.getRows().size(); i++) { // find the row the contains the query outcome
-            if (result.getRows().get(i).get(query[0]).equals(query[1])) {
-                res = String.format("%s,%d,%d", result.getRows().get(i).get("probability"), nAdd, nMul); // save result
-                break;
-            }
-        }
-
-        for (VariableNode v : data.values()) { // reset nodes for next query
-            v.setCPTUsed(false);
-            v.initCPT();
-        }
-
-        return res;
-    }
-
-    /**
      * Gets all factors that contain the hidden variable and sorts them.
      * Potential factors are: CPT of the hidden node, CPT of the hidden node's children, CPT of previously eliminated variables.
      *
@@ -186,7 +194,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             curr_factors.add(v.getCPT());
             v.setCPTUsed(true);
         }
-        for (int i = 0; i < v.getChildren().size(); i++) { // add current nodes children cpts
+        for (int i = 0; i < v.getChildren().size(); i++) { // add current node's children CPTs
             if (!v.getChildren().get(i).isCPTUsed()) {
                 curr_factors.add(v.getChildren().get(i).getCPT());
                 v.getChildren().get(i).setCPTUsed(true);
@@ -227,7 +235,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
      * @param cpt2 CPT object
      * @return 0 if x == y, a value less than 0 if x < y, a value greater than 0 if x > y
      */
-    public int compare(CPT cpt1, CPT cpt2) {
+    private int compare(CPT cpt1, CPT cpt2) {
         int diff = cpt1.getRows().size() - cpt2.getRows().size();
         if (diff == 0) {
             return Integer.compare(cpt1.getAsciiVal(), cpt2.getAsciiVal());
