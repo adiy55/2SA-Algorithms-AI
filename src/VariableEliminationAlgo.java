@@ -210,7 +210,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
                 curr_factors.add(factors.remove(i));
             }
         }
-        curr_factors.sort(this::compare);
+        curr_factors.sort(this::compare); // method reference
         return curr_factors;
     }
 
@@ -225,7 +225,7 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         while (curr_factors.size() > 1) {
             CPT res = join(curr_factors.remove(1), curr_factors.remove(0));
             curr_factors.add(res);
-            curr_factors.sort(this::compare);
+            curr_factors.sort(this::compare); // method reference
         }
         if (curr_factors.size() == 1) {
             return curr_factors.get(0);
