@@ -12,7 +12,7 @@ public class Ex1 {
         They key may be the variable name and contain the outcome as its value. If the key name is "probability", the value is the probability of the row
 
     The main advantages of a HashMap:
-    * There are no duplicates (each node is unique).
+    * There are no duplicate keys (each node is unique).
     * The information can be accessed easily (returns a value in O(1)).
     * Looping the keys or values of a HashMap is linear (O(n) runtime).
      */
