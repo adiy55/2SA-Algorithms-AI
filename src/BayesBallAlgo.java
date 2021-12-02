@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Stack;
 
 public class BayesBallAlgo implements NetworkAlgo {
-    private HashMap<String, VariableNode> data; //
+    private HashMap<String, VariableNode> data; // pointer to network
     private String input; // query prior to parsing
     private String[] query_nodes; // first query node name [0]; second query node name [1]
 
