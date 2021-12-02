@@ -2,9 +2,9 @@ import java.util.HashMap;
 import java.util.Stack;
 
 public class BayesBallAlgo implements NetworkAlgo {
-    private HashMap<String, VariableNode> data;
-    private String input;
-    private String[] query_nodes;
+    private HashMap<String, VariableNode> data; //
+    private String input; // query prior to parsing
+    private String[] query_nodes; // first query node name [0]; second query node name [1]
 
     /**
      * Bayes Ball Algorithm constructor.
@@ -58,7 +58,7 @@ public class BayesBallAlgo implements NetworkAlgo {
      * B-E|
      * B-E|J=T
      */
-    public void parseInput() {
+    private void parseInput() {
         String[] s = input.split("\\|");
         String[] query_node_names = s[0].split("-");
         if (s.length > 1) { // might not be any evidence nodes
@@ -75,7 +75,7 @@ public class BayesBallAlgo implements NetworkAlgo {
      * Checks if two nodes are independent.
      * Adds all children and parent nodes of the first query node.
      * If a path is found to the second query node- the nodes are dependant.
-     * The search follows the Bayes Ball algorithm rules.
+     * Follows the Bayes Ball algorithm rules.
      *
      * @return String result (no = dependant, yes = independent)
      */
@@ -102,7 +102,7 @@ public class BayesBallAlgo implements NetworkAlgo {
     }
 
     /**
-     * Add parent nodes tha have not been added from a child to the stack.
+     * Add parent nodes that have not been added from a child to the stack.
      *
      * @param s Stack from search
      * @param v current variable
@@ -132,5 +132,4 @@ public class BayesBallAlgo implements NetworkAlgo {
             }
         }
     }
-
 }

@@ -4,8 +4,8 @@ import java.util.HashSet;
 
 public class CPT {
     private ArrayList<HashMap<String, String>> rows; // each HashMap is a row in the factor (contains one probability and the variable outcomes)
-    private HashSet<String> varNames; // variable names
-    private int asciiVal; // sum of ascii values the variable names in the CPT
+    private HashSet<String> varNames; // variable names (in the CPT)
+    private int asciiVal; // sum of ascii values of the variable names in the CPT
 
     /**
      * CPT constructor.
@@ -75,7 +75,7 @@ public class CPT {
      The step size was calculated according to the order in the XML:
             - The given nodes of each variable according to the order in the file, then the variable itself.
             - The outcomes order is also according to the order in the file.
-            - The first given node has the largest step and the outcome of the variable itself alternate every iteration.
+            - The first given node has the largest step, and the variable itself has the smallest step size (alternates every iteration).
      */
 
     /**
@@ -158,6 +158,4 @@ public class CPT {
     public HashSet<String> getVarNames() {
         return varNames;
     }
-
 }
-

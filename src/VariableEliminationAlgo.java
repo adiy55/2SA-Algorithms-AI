@@ -67,7 +67,6 @@ public class VariableEliminationAlgo implements NetworkAlgo {
             v.setCPTUsed(false);
             v.initCPT();
         }
-
     }
 
     /**
@@ -377,5 +376,4 @@ public class VariableEliminationAlgo implements NetworkAlgo {
         }
         return query_factor;
     }
-
 }

@@ -116,5 +116,4 @@ public class FileParser {
     public ArrayList<String> getQueries() {
         return queries;
     }
-
 }

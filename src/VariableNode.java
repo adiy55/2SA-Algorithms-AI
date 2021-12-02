@@ -197,5 +197,4 @@ public class VariableNode {
         s += ", TABLE:" + table + "}";
         return s;
     }
-
 }
